@@ -45,6 +45,106 @@
   --transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ANIKI authentication result */
+.auth-result-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f4f7fb;
+}
+
+.auth-result-main {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 48px 20px;
+}
+
+.auth-result-panel {
+  width: min(100%, 560px);
+  padding: 48px 40px;
+  border: 1px solid #dbe3ee;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(15, 42, 75, 0.08);
+  text-align: center;
+}
+
+.auth-result-mark {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: #e8f7ee;
+  color: #177245;
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.auth-result-product {
+  margin: 0 0 10px;
+  color: #0758a6;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.auth-result-panel h1 {
+  margin: 0;
+  color: #13243a;
+  font-size: 1.75rem;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.auth-result-message {
+  margin: 20px 0 0;
+  color: #42536a;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.auth-result-note {
+  margin: 18px 0 0;
+  color: #6b7788;
+  font-size: 0.88rem;
+}
+
+.auth-result-link {
+  display: inline-block;
+  margin-top: 28px;
+  color: #0758a6;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.auth-result-footer {
+  padding: 20px;
+  color: #6b7788;
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .auth-result-main {
+    padding: 28px 16px;
+  }
+
+  .auth-result-panel {
+    padding: 36px 22px;
+  }
+
+  .auth-result-panel h1 {
+    font-size: 1.25rem;
+  }
+
+  .auth-result-message {
+    font-size: 0.94rem;
+  }
+}
+
 /* Reset & Base */
 *, *::before, *::after {
   box-sizing: border-box;
