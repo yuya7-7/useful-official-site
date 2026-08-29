@@ -535,8 +535,9 @@ ul {
 .strength-card {
   background: #ffffff;
   border: 1px solid var(--border-light);
+  border-top: 3px solid var(--corp-blue);
   border-radius: 12px;
-  padding: 32px 28px;
+  padding: 36px 30px;
   box-shadow: var(--shadow-card);
   transition: all var(--transition);
 }
@@ -544,23 +545,6 @@ ul {
 .strength-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
-  border-color: var(--corp-blue);
-}
-
-.strength-icon-box {
-  width: 48px;
-  height: 48px;
-  background: var(--corp-blue-light);
-  color: var(--corp-blue);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  font-family: var(--font-heading);
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin-bottom: 20px;
 }
 
 .strength-title {
