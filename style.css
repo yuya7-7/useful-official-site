@@ -548,15 +548,18 @@ ul {
 }
 
 .strength-icon-box {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   background: var(--corp-blue-light);
   color: var(--corp-blue);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  font-size: 1.6rem;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   margin-bottom: 20px;
 }
 
