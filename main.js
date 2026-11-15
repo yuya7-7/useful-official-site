@@ -1,6 +1,6 @@
 /**
  * Useful Studio 57 - Main JavaScript
- * Full Mobile Navigation & Interactive Features
+ * Mobile Navigation & Smooth Scroll Reveal
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,38 +26,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Smooth Header Shadow on Scroll
+  // Subtle Header Shadow on Scroll
   const header = document.getElementById('header');
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 20) {
-      header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
-    } else {
-      header.style.boxShadow = 'none';
-    }
-  });
+  if (header) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 16) {
+        header.style.boxShadow = '0 4px 20px rgba(17, 20, 24, 0.05)';
+      } else {
+        header.style.boxShadow = 'none';
+      }
+    });
+  }
 
-  // Intersection Observer for smooth reveal
+  // Smooth fade-in reveal for Bento Cards
   const observerOptions = {
     root: null,
     rootMargin: '0px',
-    threshold: 0.08
+    threshold: 0.06
   };
 
-  const observer = new IntersectionObserver((entries, observer) => {
+  const observer = new IntersectionObserver((entries, obs) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.style.opacity = '1';
         entry.target.style.transform = 'translateY(0)';
-        observer.unobserve(entry.target);
+        obs.unobserve(entry.target);
       }
     });
   }, observerOptions);
 
-  const animatedElements = document.querySelectorAll('.strength-card, .service-card, .product-card, .metric-card');
+  const animatedElements = document.querySelectorAll(
+    '.bento-card, .strength-card, .studio-info-card, .contact-card'
+  );
   animatedElements.forEach(el => {
     el.style.opacity = '0';
-    el.style.transform = 'translateY(16px)';
-    el.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out';
+    el.style.transform = 'translateY(12px)';
+    el.style.transition = 'opacity 0.35s ease-out, transform 0.35s ease-out';
     observer.observe(el);
   });
 });
