@@ -376,6 +376,7 @@
           <button class="tab-btn active" data-tab="tab-proposal">📊 1. 貢献できる「3つの軸」</button>
           <button class="tab-btn" data-tab="tab-sample1">📉 2. 統計実例①：打った台の勝ち負け分析</button>
           <button class="tab-btn" data-tab="tab-sample2">🌺 3. 統計実例②：店舗別の沖ドキ560台実測</button>
+          <button class="tab-btn" data-tab="tab-sample3">🎯 4. 統計実例③：リコリコ分析＆打ち方攻略</button>
         </nav>
       </div>
     </header>
@@ -448,14 +449,15 @@
         <div class="card">
           <div class="card-head">
             <span class="pill-tag tag-amber">実例データ</span>
-            <h2 class="card-title">実際に取った統計データのサンプル（2種類）</h2>
+            <h2 class="card-title">実際に取った統計データのサンプル（3種類）</h2>
           </div>
           <p style="color:var(--sub); font-size:0.93rem; margin-bottom:14px;">
-            下のボタンから、実際に稼働ログやホールデータから算出した統計サンプルをご覧いただけます。
+            下のボタンから、実際に稼働ログやホールデータから算出した統計サンプルと打ち方攻略をご覧いただけます。
           </p>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button class="copy-btn" onclick="switchTab('tab-sample1')">📉 統計実例①（打った台からの負け台特定）を見る →</button>
             <button class="copy-btn" style="background:var(--amber);" onclick="switchTab('tab-sample2')">🌺 統計実例②（店舗別・沖ドキ560台実測）を見る →</button>
+            <button class="copy-btn" style="background:var(--green);" onclick="switchTab('tab-sample3')">🎯 統計実例③（リコリコ3,810履歴分析＆打ち方攻略）を見る →</button>
           </div>
         </div>
       </section>
@@ -803,6 +805,283 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: リコリコ実測分析＆打ち方完全攻略 -->
+      <section class="tab-panel" id="tab-sample3">
+        <div class="card">
+          <div class="card-head">
+            <span class="pill-tag" style="background:rgba(16,185,129,0.18); color:var(--green);">サンプル ③：Lリコリス・リコイル 3,810履歴の実測分析 ＆ 打ち方攻略</span>
+            <h2 class="card-title">大型店（C店・全25台×8日分＝全639回AT）の生データ解析と現場の立ち回り攻略</h2>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-box">
+              <div class="kpi-label">自動収集した実測履歴数</div>
+              <div class="kpi-val">3,810 履歴</div>
+              <div class="kpi-note">全25台×8日分（200台日・AT初当たり639回）を完全解析</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">朝イチ「1回目CZ失敗後→STまで」</div>
+              <div class="kpi-val c-green">+4,811 円（123.2%）</div>
+              <div class="kpi-note">朝リセ台は1回目CZをスルーしてもヤメ厳禁！</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">AT駆け抜け後「250G天井CZ失敗後」</div>
+              <div class="kpi-val c-red">-4,335 円（82.3%）</div>
+              <div class="kpi-note">64.3%が600G天井へ直行＆平均1.14連の大赤字ゾーン</div>
+            </div>
+          </div>
+
+          <div class="callout" style="border-left-color:var(--green); background:rgba(16,185,129,0.08);">
+            <strong>💡 なぜこの分析でライバルと圧倒的な差がつくのか？</strong><br>
+            1. <strong>データカウンターの「55Gズレ」の罠を補正：</strong>リコリコはAT駆け抜け時に信号が上がらないため、データカウンターの次ゲーム数に<strong>AT/ST消化分の約55G（連チャン後は約35G）がそのまま上乗せ</strong>されます（データ表示320G＝実際の液晶は265G）。これを補正して計算することで、本物の期待値を算出しています。<br>
+            2. <strong>「朝イチ」と「AT駆け抜け後」で1回目CZ失敗後の期待値が真逆になることを発見：</strong>ネットの一般的な天井狙い表だけでは分からない<strong>「朝イチはCZスルー後にSTまで全ツッパが激甘（123.2%）」「逆にAT駆け抜け後は1回目CZ失敗で即ヤメしないと大赤字（特に250G天井CZ失敗後は82.3%）」</strong>という決定的な攻略法を実測データから導き出しています。
+          </div>
+
+          <h3 class="sub-heading">🔍 1. ホール履歴（データカウンター）の正しい読み解き方</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>データカウンターの表示</th>
+                  <th>実際のゲーム内の状態</th>
+                  <th>履歴から「駆け抜け／連チャン」を見分ける方法</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>ART 信号</strong></td>
+                  <td class="left">通常時の <strong>CZ当選</strong> または <strong>AT中のボーナス当選</strong></td>
+                  <td class="left"><code>RB</code> の前に並んでいる <code>ART</code> は通常時のCZスルー回数</td>
+                </tr>
+                <tr>
+                  <td><strong>RB 信号</strong></td>
+                  <td class="left"><strong>ST（リコリスラッシュ）初当たり</strong>（通常3〜7Gで発火）</td>
+                  <td class="left">直前のCZ（ART）を突破してラッシュに突入した合図</td>
+                </tr>
+                <tr>
+                  <td class="cell-win"><strong>RB 後に 60G以内の ART なし</strong></td>
+                  <td class="left"><strong>✅ AT駆け抜け後（天井600G＋CZ天井250Gに短縮）</strong></td>
+                  <td class="left">データカウンターの次G数に <strong>AT消化分（約55G）が上乗せ</strong> される（表示320G＝液晶265G）</td>
+                </tr>
+                <tr>
+                  <td class="cell-warn"><strong>RB 後に 60G以内の ART 連続</strong></td>
+                  <td class="left"><strong>🔥 AT連チャン後（通常天井850G・CZ天井600G）</strong></td>
+                  <td class="left">※61〜80GのARTも約半数は強ボーナス（Wボナ・エピボ等）による連チャン継続</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="sub-heading">📊 2. 噂の検証：「差枚 -1,500枚 / -2,000枚以下 × 駆け抜け後」は本当に強いのか？</h3>
+          <p style="font-size:0.86rem; color:var(--sub); margin-bottom:10px;">
+            駆け抜け後（全200件）を差枚別に分け、<strong>「A. ST（RB）当選まで打ち切る場合」</strong>と<strong>「B. 1回目CZ（液晶250G天井）失敗で即ヤメする場合」</strong>を比較した実測値です：
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>駆け抜け後の差枚条件</th>
+                  <th>液晶0G〜<br>【A. ST(RB)まで打ち切り】</th>
+                  <th>液晶0G〜<br>【B. 1回目CZ失敗で即ヤメ】</th>
+                  <th>液晶50G〜<br>（STまで打ち切り）</th>
+                  <th>液晶100G〜<br>（STまで打ち切り）</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="left">① 差枚 -2,000枚以下 × 駆け抜け後</td>
+                  <td>+1,133円（104.4%）</td>
+                  <td class="cell-win">+2,838円（116.1%）🔥</td>
+                  <td class="cell-win">+2,705円（112.0%）🔥</td>
+                  <td class="cell-win">+4,403円（121.0%）🔥</td>
+                </tr>
+                <tr>
+                  <td class="left">② 差枚 -1,500枚以下 × 駆け抜け後</td>
+                  <td>+1,102円（104.2%）</td>
+                  <td class="cell-win">+1,930円（110.8%）🔥</td>
+                  <td class="cell-win">+2,674円（111.6%）🔥</td>
+                  <td class="cell-win">+4,313円（120.7%）🔥</td>
+                </tr>
+                <tr>
+                  <td class="left">③ 差枚 -1,500〜+1,500枚 × 駆け抜け後</td>
+                  <td>+3円（100.0%）</td>
+                  <td>+546円（103.4%）</td>
+                  <td>+970円（104.2%）</td>
+                  <td class="cell-win">+2,108円（110.1%）🔥</td>
+                </tr>
+                <tr>
+                  <td class="left">④ 差枚 0〜+1,500枚（プラス域）× 駆け抜け</td>
+                  <td class="cell-loss">-1,955円（92.1%）💀</td>
+                  <td class="cell-loss">-344円（97.9%）❌</td>
+                  <td class="cell-loss">-383円（98.3%）❌</td>
+                  <td>+609円（103.1%）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="sub-heading">📊 3. 【最重要の発見】「朝イチ」と「AT駆け抜け後」で真逆になる『CZ1スルー後』の期待値</h3>
+          <p style="font-size:0.86rem; color:var(--sub); margin-bottom:10px;">
+            1回目のCZ（液晶250G以内）に失敗した直後（CZ1スルー時点）からST（RB）まで追った場合の実測比較です。<strong>朝イチとAT後で結果が180度変わります：</strong>
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>状態（1回目CZ失敗直後 → STまで）</th>
+                  <th>件数</th>
+                  <th>STまでの残り平均G</th>
+                  <th>600G天井到達率</th>
+                  <th>次回AT平均（駆け抜け率）</th>
+                  <th>期待値 / 機械割</th>
+                  <th>現場での判断</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="left">🌅 朝イチ・250G天井でCZ失敗後</td>
+                  <td>25件</td>
+                  <td class="cell-win">175.8 G</td>
+                  <td>24.0%</td>
+                  <td class="cell-win">2.84連 / 574枚（16.0%）</td>
+                  <td class="cell-win">+5,951円（127.7%）🔥</td>
+                  <td class="left"><strong>絶対続行（STまで全ツッパ）</strong></td>
+                </tr>
+                <tr>
+                  <td class="left">🌅 朝イチ・240G以下でCZ失敗後</td>
+                  <td>44件</td>
+                  <td class="cell-win">180.0 G</td>
+                  <td>6.8%</td>
+                  <td class="cell-win">2.36連 / 491枚（40.9%）</td>
+                  <td class="cell-win">+4,163円（120.5%）🔥</td>
+                  <td class="left"><strong>絶対続行（STまで全ツッパ）</strong></td>
+                </tr>
+                <tr>
+                  <td class="left">🌅 【朝イチ CZ1スルー全体】</td>
+                  <td>69件</td>
+                  <td class="cell-win">178.5 G</td>
+                  <td>13.0%</td>
+                  <td class="cell-win">2.54連 / 521枚（31.9%）</td>
+                  <td class="cell-win">+4,811円（123.2%）🔥</td>
+                  <td class="left"><strong>朝リセの1スルーは全台お宝</strong></td>
+                </tr>
+                <tr>
+                  <td class="left">💀 AT駆け抜け後・250G天井でCZ失敗後</td>
+                  <td>28件</td>
+                  <td class="cell-loss">315.2 G</td>
+                  <td class="cell-loss">64.3%</td>
+                  <td class="cell-loss">1.14連 / 260枚（67.9%）</td>
+                  <td class="cell-loss">-4,335円（82.3%）💀</td>
+                  <td class="left"><strong>絶対に追わず即ヤメ厳守！</strong></td>
+                </tr>
+                <tr>
+                  <td class="left">💀 【AT駆け抜け後 CZ1スルー全体】</td>
+                  <td>80件</td>
+                  <td>270.6 G</td>
+                  <td>33.8%</td>
+                  <td class="cell-loss">1.56連 / 352枚（53.8%）</td>
+                  <td class="cell-loss">-1,472円（93.6%）❌</td>
+                  <td class="left"><strong>基本即ヤメ（拾うなら下記条件のみ）</strong></td>
+                </tr>
+                <tr>
+                  <td class="left">💀 【AT連チャン後 CZ1スルー全体】</td>
+                  <td>170件</td>
+                  <td class="cell-loss">444.6 G</td>
+                  <td>—</td>
+                  <td>2.62連 / 536枚（40.6%）</td>
+                  <td class="cell-loss">-3,253円（91.3%）❌</td>
+                  <td class="left"><strong>浅いG数からは絶対触らない</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="sub-heading">📊 4. 朝イチ（リセット店）「1回目CZ失敗ヤメ」vs「ST(RB)まで打ち切り」比較</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>朝イチ開始G数（CZ0スルー）</th>
+                  <th>件数</th>
+                  <th>1回目CZ突破率</th>
+                  <th>❌ 1回目CZ失敗でヤメた場合</th>
+                  <th>⭕ 失敗してもST(RB)まで打ち切った場合</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>0G〜</strong></td>
+                  <td>194件</td>
+                  <td>64.4%</td>
+                  <td class="cell-loss">-222円（98.7%）❌</td>
+                  <td class="cell-win">+1,489円（106.1%）🔥</td>
+                </tr>
+                <tr>
+                  <td><strong>50G〜</strong></td>
+                  <td>182件</td>
+                  <td>65.4%</td>
+                  <td class="cell-win">+1,049円（107.2%）</td>
+                  <td class="cell-win">+2,523円（111.8%）🔥</td>
+                </tr>
+                <tr>
+                  <td><strong>100G〜</strong></td>
+                  <td>155件</td>
+                  <td>65.8%</td>
+                  <td class="cell-win">+2,046円（116.0%）🔥</td>
+                  <td class="cell-win">+3,899円（119.7%）🔥</td>
+                </tr>
+                <tr>
+                  <td><strong>150G〜</strong></td>
+                  <td>135件</td>
+                  <td>68.1%</td>
+                  <td class="cell-win">+3,373円（130.9%）🔥</td>
+                  <td class="cell-win">+5,238円（130.2%）🔥</td>
+                </tr>
+                <tr>
+                  <td><strong>200G〜</strong></td>
+                  <td>105件</td>
+                  <td>67.6%</td>
+                  <td class="cell-win">+4,545円（150.8%）🔥</td>
+                  <td class="cell-win">+6,615円（141.8%）🔥</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="sub-heading">🎯 5. 現場の打ち子・班長に徹底する「リコリコ打ち方完全攻略（4大鉄則）」</h3>
+          <div class="bar-list">
+            <div class="bar-row" style="border-left:4px solid var(--green);">
+              <div class="bar-top"><span>鉄則 ①：朝イチ（リセット店）は「50G〜（できれば100G〜）」から狙い、1回目CZをスルーしても絶対にヤメずST(RB)まで打ち切る！</span></div>
+              <div style="font-size:0.84rem; color:var(--sub);">
+                朝イチは1回目CZを失敗した後の区間が <strong>+4,811円（機械割123.2%）</strong> と一番美味いため、1回目CZ失敗で捨てると最大の期待値をドブに捨てることになります。逆に朝イチの1スルー放置台を見つけたら0Gからでも即確保（120.5%〜127.7%）！
+              </div>
+            </div>
+
+            <div class="bar-row" style="border-left:4px solid var(--amber);">
+              <div class="bar-top"><span>鉄則 ②：AT駆け抜け後は「差枚マイナス（特に-1,500枚以下）なら0G〜1回目CZ狙い（110.8%〜116.1%）」、ただし1回目CZ失敗で即ヤメ！</span></div>
+              <div style="font-size:0.84rem; color:var(--sub);">
+                差枚プラス域の駆け抜け後は0Gから打つとマイナス（92.1%）なので液晶150G〜まで待つこと。また、<strong>駆け抜け後の1回目CZ（特に250G天井）を失敗した後は機械割82.3%（-4,335円）の地獄区間</strong>になるため、朝イチとは逆に<strong>「1回目CZ失敗で即ヤメ」</strong>を徹底します。
+              </div>
+            </div>
+
+            <div class="bar-row" style="border-left:4px solid var(--blue);">
+              <div class="bar-top"><span>鉄則 ③：すでにCZ1スルーしている駆け抜け後台を拾うなら「液晶200〜250Gのゾーン手前」か「液晶450G〜の天井狙い」の2択のみ！</span></div>
+              <div style="font-size:0.84rem; color:var(--sub);">
+                150G以内に1回目CZを外して <strong>液晶200〜250Gで落ちている台は250Gゾーンが残っているため激甘（114.8%〜117.1%）</strong>。そこを抜けた液晶300〜350G（95%〜96%）は絶対に触らず、<strong>液晶450G〜（600G短縮天井狙い：109.3%）</strong>まで育つのを待ちます。
+              </div>
+            </div>
+
+            <div class="bar-row" style="border-left:4px solid var(--red);">
+              <div class="bar-top"><span>鉄則 ④：通常連チャン後の「100Gゾーン回し」は厳禁（機械割78.2%の大赤字）！追うのは「上位AT後（100G+α引き戻し）」と「液晶500G〜」だけ！</span></div>
+              <div style="font-size:0.84rem; color:var(--sub);">
+                下位AT連チャン後に0Gから100Gゾーン（液晶150G）まで回すと <strong>1回あたり平均 -2,369円（機械割78.2%）</strong> 溶けます。連チャン後は前兆・スタンプカード・短縮アイコンだけ確認して即ヤメし、<strong>上位AT（リコリスラッシュW）終了後のみ100G+α引き戻し（データ表示160〜175G付近）までフォロー</strong>します。
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
     </main>
