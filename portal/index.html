@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Useful Personal Hub | トップページ</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #151f32;
+      --surface-2: #1e293b;
+      --surface-hover: #243249;
+      --border: #2e3f5c;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --sub: #cbd5e1;
+      --blue: #38bdf8;
+      --amber: #f59e0b;
+      --green: #10b981;
+      --purple: #a78bfa;
+      --red: #f43f5e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding-bottom: 64px;
+    }
+    a { color: var(--blue); text-decoration: none; }
+
+    /* Custom Scrollbar for inner scrollable boxes */
+    .scroll-box {
+      max-height: 310px;
+      overflow-y: auto;
+      padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) rgba(11, 17, 32, 0.4);
+    }
+    .scroll-box.tall {
+      max-height: 440px;
+    }
+    .scroll-box::-webkit-scrollbar {
+      width: 6px;
+    }
+    .scroll-box::-webkit-scrollbar-track {
+      background: rgba(11, 17, 32, 0.4);
+      border-radius: 999px;
+    }
+    .scroll-box::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 999px;
+    }
+    .scroll-box::-webkit-scrollbar-thumb:hover {
+      background: var(--blue);
+    }
+
+    /* Passcode Lock Overlay */
+    #app-content { display: none; }
+    #app-content.unlocked { display: block; }
+    .lock-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: radial-gradient(circle at 50% 25%, #162238 0%, #0b1120 75%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .lock-overlay.hidden { display: none; }
+    .lock-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+    }
+    .lock-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(56, 189, 248, 0.14);
+      color: var(--blue);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 14px;
+    }
+    .lock-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+    .lock-desc { font-size: 0.84rem; color: var(--muted); margin-bottom: 18px; }
+    .lock-input {
+      width: 100%;
+      background: #070b14;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #fff;
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: 0.35em;
+      text-align: center;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    .lock-input:focus { border-color: var(--blue); }
+    .lock-error { color: #fda4af; font-size: 0.82rem; font-weight: 700; min-height: 20px; margin-bottom: 8px; }
+    .lock-btn {
+      width: 100%;
+      background: var(--blue);
+      color: #0b1120;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.96rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* Header */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 17, 32, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+    }
+    .header-inner {
+      max-width: 820px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-size: 1.05rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 10px var(--blue);
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lock-top-btn {
+      background: var(--surface-2);
+      color: var(--sub);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .lock-top-btn:hover { border-color: var(--blue); color: #fff; }
+
+    .container {
+      max-width: 820px;
+      margin: 18px auto 0;
+      padding: 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* =====================================================
+       1. よく使うサイト（Chromeショートカット風 横スクロール）
+       ===================================================== */
+    .shortcuts-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 14px 14px;
+    }
+    .shortcuts-header {
+      font-size: 0.84rem;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
+    .shortcuts-strip {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 4px 4px 8px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .shortcuts-strip::-webkit-scrollbar { height: 5px; }
+    .shortcuts-strip::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 999px;
+    }
+    .shortcut-item {
+      flex: 0 0 72px;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      color: var(--text);
+      text-decoration: none;
+      gap: 7px;
+    }
+    .shortcut-item:hover { text-decoration: none; }
+    .shortcut-circle {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    .shortcut-item:hover .shortcut-circle {
+      transform: translateY(-2px);
+      border-color: var(--blue);
+      background: var(--surface-hover);
+    }
+    .shortcut-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--sub);
+      line-height: 1.25;
+      max-width: 72px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* =====================================================
+       共通：開閉できるセクション（アコーディオン）
+       ===================================================== */
+    .accordion-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+    .accordion-header {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      padding: 15px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .accordion-header:hover { background: rgba(255, 255, 255, 0.03); }
+    .acc-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .acc-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+    }
+    .ic-green { background: rgba(16, 185, 129, 0.16); color: var(--green); }
+    .ic-amber { background: rgba(245, 158, 11, 0.16); color: var(--amber); }
+    .ic-blue { background: rgba(56, 189, 248, 0.16); color: var(--blue); }
+    .ic-purple { background: rgba(167, 139, 250, 0.16); color: var(--purple); }
+
+    .acc-title { font-size: 1.05rem; font-weight: 800; }
+    .acc-badge {
+      font-size: 0.76rem;
+      font-weight: 800;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--sub);
+      border: 1px solid var(--border);
+    }
+    .acc-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .acc-arrow {
+      font-size: 0.85rem;
+      color: var(--muted);
+      transition: transform 0.2s ease;
+    }
+    .accordion-card.open .acc-arrow { transform: rotate(180deg); }
+    .accordion-body {
+      display: none;
+      padding: 0 18px 18px;
+      border-top: 1px solid rgba(46, 63, 92, 0.5);
+    }
+    .accordion-card.open .accordion-body {
+      display: block;
+      padding-top: 14px;
+    }
+
+    /* =====================================================
+       2. ルーティン ＆ タスク（追加・編集・削除・上下スクロール対応）
+       ===================================================== */
+    .routine-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 15px 18px 18px;
+    }
+    .routine-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .task-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(11, 17, 32, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 0.91rem;
+    }
+    .task-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      flex: 1;
+      cursor: pointer;
+      user-select: none;
+      word-break: break-word;
+    }
+    .task-label input[type="checkbox"] {
+      margin-top: 4px;
+      width: 17px;
+      height: 17px;
+      accent-color: var(--blue);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .task-row.done .task-text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+    .task-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .icon-btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .icon-btn:hover {
+      color: #fff;
+      border-color: var(--blue);
+    }
+    .icon-btn.del:hover {
+      color: #fda4af;
+      border-color: var(--red);
+    }
+    .add-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .add-input {
+      flex: 1;
+      background: #070b14;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 0.86rem;
+      outline: none;
+    }
+    .add-input:focus { border-color: var(--blue); }
+    .add-btn {
+      background: var(--blue);
+      color: #0b1120;
+      border: none;
+      border-radius: 9px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .mini-btn {
+      background: var(--surface-2);
+      color: var(--sub);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .mini-btn:hover { border-color: var(--blue); color: #fff; }
+
+    /* =====================================================
+       3. よく使うコピペ
+       ===================================================== */
+    .copy-group-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--sub);
+      margin: 12px 0 6px;
+    }
+    .copy-group-title:first-child { margin-top: 0; }
+    .code-box {
+      background: #070b14;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.84rem;
+      color: #38bdf8;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .code-pre {
+      white-space: pre-wrap;
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", monospace;
+      color: var(--sub);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .copy-btn {
+      background: var(--blue);
+      color: #0b1120;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.78rem;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* =====================================================
+       4. 資料＆データ（フォルダ階層＋メモ帳機能）
+       ===================================================== */
+    .folder-breadcrumb {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(11, 17, 32, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--sub);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .folder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .folder-row {
+      width: 100%;
+      background: rgba(11, 17, 32, 0.55);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text);
+      font-size: 0.96rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    }
+    .folder-row:hover {
+      background: var(--surface-hover);
+      border-color: var(--blue);
+      transform: translateX(2px);
+    }
+    .folder-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .folder-emoji { font-size: 1.25rem; }
+    .folder-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 500;
+      display: block;
+    }
+    .folder-arrow {
+      color: var(--blue);
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+
+    .folder-view { display: none; }
+    .folder-view.active { display: block; }
+
+    /* Memo Pad UI inside メモ folder */
+    .memo-editor-box {
+      background: rgba(11, 17, 32, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .memo-title-input {
+      width: 100%;
+      background: #070b14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 11px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      outline: none;
+    }
+    .memo-title-input:focus { border-color: var(--blue); }
+    .memo-body-input {
+      width: 100%;
+      min-height: 92px;
+      background: #070b14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      margin-bottom: 8px;
+    }
+    .memo-body-input:focus { border-color: var(--blue); }
+    .memo-editor-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .memo-card {
+      background: rgba(11, 17, 32, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .memo-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .memo-card-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .memo-card-date {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-left: 6px;
+      font-weight: 500;
+    }
+    .memo-card-body {
+      font-size: 0.86rem;
+      color: var(--sub);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .file-card {
+      display: block;
+      background: rgba(11, 17, 32, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      color: var(--text);
+      text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .file-card.featured {
+      background: linear-gradient(135deg, #17253f 0%, #111a2e 100%);
+      border: 2px solid var(--blue);
+    }
+    .file-card:hover {
+      border-color: var(--blue);
+      background: var(--surface-hover);
+      text-decoration: none;
+    }
+    .file-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .file-desc { font-size: 0.85rem; color: var(--sub); }
+    .note-detail {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--sub);
+      display: none;
+    }
+    .file-card.expanded .note-detail { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- Passcode Lock Screen -->
+  <div class="lock-overlay" id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-title">Personal Hub ロック中</div>
+      <p class="lock-desc">閲覧するにはパスコードを入力してください</p>
+      <form id="lock-form" onsubmit="handleUnlock(event)">
+        <input type="password" id="lock-input" class="lock-input" inputmode="numeric" placeholder="••••" autocomplete="off" autofocus>
+        <div class="lock-error" id="lock-error"></div>
+        <button type="submit" class="lock-btn">ロック解除</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-content">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="brand">
+          <span class="brand-dot"></span>
+          <span>Useful Personal Hub</span>
+        </div>
+        <div class="header-actions">
+          <span id="cloud-sync-badge" style="font-size:0.75rem; font-weight:700; color:var(--green); background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35); padding:4px 10px; border-radius:999px;">
+            ☁️ 自動同期ON
+          </span>
+          <button class="lock-top-btn" onclick="pullFromCloud(true)" title="クラウドから最新データを再取得します">
+            🔄 最新同期
+          </button>
+          <button class="lock-top-btn" onclick="lockPage()">🔒 ロック</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+
+      <!-- =====================================================
+           1. よく使うサイト（Chromeショートカット風・左右スクロール）
+           ===================================================== -->
+      <section class="shortcuts-box">
+        <div class="shortcuts-header">
+          <span>🌐 よく使うサイト</span>
+          <span style="font-size:0.74rem; font-weight:500;">← 左右にスクロール →</span>
+        </div>
+        <div class="shortcuts-strip">
+          <a class="shortcut-item" href="gundan-proposal.html">
+            <div class="shortcut-circle" style="border-color:var(--blue);">🎰</div>
+            <span class="shortcut-label">軍団プレゼン</span>
+          </a>
+          <a class="shortcut-item" href="https://useful-studio57.com/" target="_blank" rel="noopener">
+            <div class="shortcut-circle">🏢</div>
+            <span class="shortcut-label">Useful公式</span>
+          </a>
+          <a class="shortcut-item" href="https://kiocraft-web.web.app/" target="_blank" rel="noopener">
+            <div class="shortcut-circle">📱</div>
+            <span class="shortcut-label">キオクラフト</span>
+          </a>
+          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/castle-atsuta.htm" target="_blank" rel="noopener">
+            <div class="shortcut-circle">🏯</div>
+            <span class="shortcut-label">熱田キャッスル</span>
+          </a>
+          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/kingwakamiya.htm" target="_blank" rel="noopener">
+            <div class="shortcut-circle">👑</div>
+            <span class="shortcut-label">若宮キング</span>
+          </a>
+          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/maruhan-kamiotai.htm" target="_blank" rel="noopener">
+            <div class="shortcut-circle">🔴</div>
+            <span class="shortcut-label">上小田井マル</span>
+          </a>
+          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/kingkanayama.htm" target="_blank" rel="noopener">
+            <div class="shortcut-circle">🦁</div>
+            <span class="shortcut-label">金山キング</span>
+          </a>
+          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/king-yanagibashi.htm" target="_blank" rel="noopener">
+            <div class="shortcut-circle">🌉</div>
+            <span class="shortcut-label">柳橋キング</span>
+          </a>
+          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/castle-oozone.htm" target="_blank" rel="noopener">
+            <div class="shortcut-circle">🏰</div>
+            <span class="shortcut-label">大曽根キャス</span>
+          </a>
+          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/kingsakae.htm" target="_blank" rel="noopener">
+            <div class="shortcut-circle">✨</div>
+            <span class="shortcut-label">住吉キング</span>
+          </a>
+          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/kingkankou-sinsakae.htm" target="_blank" rel="noopener">
+            <div class="shortcut-circle">⚡</div>
+            <span class="shortcut-label">東新町キング</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- =====================================================
+           2-A. ルーティン（追加・編集・削除・上下スクロール対応）
+           ===================================================== -->
+      <section class="routine-card">
+        <div class="routine-head">
+          <div class="acc-title-wrap">
+            <span class="acc-icon ic-green">♾️</span>
+            <span class="acc-title">ルーティン</span>
+            <span class="acc-badge" id="routine-count">0 / 0</span>
+          </div>
+          <button class="mini-btn" onclick="resetChecks('routine')">🔄 チェックをリセット</button>
+        </div>
+
+        <div class="scroll-box">
+          <div class="task-list" id="routine-list"></div>
+        </div>
+
+        <form class="add-bar" onsubmit="handleAddItem(event, 'routine')">
+          <input type="text" id="routine-add-input" class="add-input" placeholder="＋ 新しいルーティンを追加...">
+          <button type="submit" class="add-btn">追加</button>
+        </form>
+      </section>
+
+      <!-- =====================================================
+           2-B. タスク（開閉・追加・編集・削除・上下スクロール対応）
+           ===================================================== -->
+      <section class="accordion-card" id="acc-tasks">
+        <button class="accordion-header" onclick="toggleAccordion('acc-tasks')">
+          <div class="acc-title-wrap">
+            <span class="acc-icon ic-amber">🔥</span>
+            <span class="acc-title">タスク</span>
+            <span class="acc-badge" id="task-count">0 / 0</span>
+          </div>
+          <div class="acc-right">
+            <span class="acc-arrow">▼</span>
+          </div>
+        </button>
+        <div class="accordion-body">
+          <div class="scroll-box">
+            <div class="task-list" id="task-list"></div>
+          </div>
+          <form class="add-bar" onsubmit="handleAddItem(event, 'task')">
+            <input type="text" id="task-add-input" class="add-input" placeholder="＋ 新しいタスクを追加...">
+            <button type="submit" class="add-btn">追加</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- =====================================================
+           3. よく使うコピペ（開閉・追加・編集・削除・上下スクロール対応）
+           ===================================================== -->
+      <section class="accordion-card" id="acc-copypaste">
+        <button class="accordion-header" onclick="toggleAccordion('acc-copypaste')">
+          <div class="acc-title-wrap">
+            <span class="acc-icon ic-blue">📋</span>
+            <span class="acc-title">よく使うコピペ</span>
+            <span class="acc-badge" id="copypaste-count">0 件</span>
+          </div>
+          <div class="acc-right">
+            <span class="acc-arrow">▼</span>
+          </div>
+        </button>
+        <div class="accordion-body">
+          <!-- 保存済みコピペ一覧（上下スクロール） -->
+          <div class="scroll-box tall" id="copypaste-list"></div>
+
+          <!-- 新規コピペ追加・編集エリア -->
+          <div class="memo-editor-box" style="margin-top:12px; margin-bottom:0;">
+            <input type="text" id="cp-title-input" class="memo-title-input" placeholder="＋ コピペのラベル・用途（例：熱田 終了検索 / 打ち子ヒアリング）">
+            <textarea id="cp-body-input" class="memo-body-input" style="min-height:68px;" placeholder="コピーしたいテキストを入力...（複数行OK）"></textarea>
+            <div class="memo-editor-actions">
+              <span style="font-size:0.75rem; color:var(--muted);" id="cp-status">よく使う定型文や検索コマンドを追加・編集できます</span>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="mini-btn" id="cp-cancel-btn" style="display:none;" onclick="cancelEditCopyPaste()">キャンセル</button>
+                <button type="button" class="add-btn" id="cp-save-btn" onclick="saveCopyPaste()">＋ コピペを追加</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================
+           4. 資料＆データ（開閉・フォルダ階層・メモ帳保存・上下スクロール）
+           ===================================================== -->
+      <section class="accordion-card open" id="acc-folders">
+        <button class="accordion-header" onclick="toggleAccordion('acc-folders')">
+          <div class="acc-title-wrap">
+            <span class="acc-icon ic-purple">🗂️</span>
+            <span class="acc-title">資料＆データ</span>
+          </div>
+          <div class="acc-right">
+            <span class="acc-arrow">▼</span>
+          </div>
+        </button>
+
+        <div class="accordion-body">
+
+          <!-- フォルダ一覧（ルート階層） -->
+          <div class="folder-view active" id="folder-root">
+            <div class="folder-list">
+              <button class="folder-row" onclick="openFolder('folder-memo')">
+                <div class="folder-left">
+                  <span class="folder-emoji">📝</span>
+                  <div>
+                    <span>メモ</span>
+                    <span class="folder-sub">自由に書いて保存できるメモ帳（AI確認・書き出し対応）</span>
+                  </div>
+                </div>
+                <span class="folder-arrow">→</span>
+              </button>
+
+              <button class="folder-row" onclick="openFolder('folder-shikou')">
+                <div class="folder-left">
+                  <span class="folder-emoji">📁</span>
+                  <div>
+                    <span>思考</span>
+                    <span class="folder-sub">期待値思考 vs 積立消化思考・軍団役職定義</span>
+                  </div>
+                </div>
+                <span class="folder-arrow">→</span>
+              </button>
+
+              <button class="folder-row" onclick="openFolder('folder-jiko')">
+                <div class="folder-left">
+                  <span class="folder-emoji">📁</span>
+                  <div>
+                    <span>自己分析</span>
+                    <span class="folder-sub">TEG-IIエゴグラム・組織運営の教訓・並列思考</span>
+                  </div>
+                </div>
+                <span class="folder-arrow">→</span>
+              </button>
+
+              <button class="folder-row" onclick="openFolder('folder-presen')" style="border-color:rgba(56,189,248,0.5);">
+                <div class="folder-left">
+                  <span class="folder-emoji">📂</span>
+                  <div>
+                    <span style="color:var(--blue);">プレゼン資料</span>
+                    <span class="folder-sub">プレゼン資料・統計レポート一覧</span>
+                  </div>
+                </div>
+                <span class="folder-arrow">→</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ① メモ フォルダの中身（入力・保存・編集・上下スクロール可能なメモ帳） -->
+          <div class="folder-view" id="folder-memo">
+            <div class="folder-breadcrumb">
+              <span>🗂️ 資料＆データ &gt; 📝 メモ（メモ帳）</span>
+              <div style="display:flex; gap:6px;">
+                <button class="mini-btn" onclick="exportAllDataForAI()">🤖 AI用ファイル保存</button>
+                <button class="mini-btn" onclick="openFolder('folder-root')">← フォルダ一覧へ戻る</button>
+              </div>
+            </div>
+
+            <!-- 新規メモ入力エリア -->
+            <div class="memo-editor-box">
+              <input type="text" id="memo-title" class="memo-title-input" placeholder="メモのタイトル（省略可）">
+              <textarea id="memo-body" class="memo-body-input" placeholder="ここにメモを入力...（保存するとブラウザに自動記録され、AI参照用ファイルにも書き出せます）"></textarea>
+              <div class="memo-editor-actions">
+                <span style="font-size:0.76rem; color:var(--muted);" id="memo-status">入力内容は保存ボタンで記録されます</span>
+                <div style="display:flex; gap:8px;">
+                  <button type="button" class="mini-btn" id="memo-cancel-btn" style="display:none;" onclick="cancelEditMemo()">キャンセル</button>
+                  <button type="button" class="add-btn" id="memo-save-btn" onclick="saveMemo()">💾 メモを保存</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 保存済みメモ一覧（上下スクロール） -->
+            <div class="scroll-box tall" id="memo-list"></div>
+          </div>
+
+          <!-- ② 思考 フォルダの中身 -->
+          <div class="folder-view" id="folder-shikou">
+            <div class="folder-breadcrumb">
+              <span>🗂️ 資料＆データ &gt; 📁 思考</span>
+              <button class="mini-btn" onclick="openFolder('folder-root')">← フォルダ一覧へ戻る</button>
+            </div>
+            <div class="scroll-box tall">
+              <div class="file-card" onclick="this.classList.toggle('expanded')" style="cursor:pointer;">
+                <div class="file-title">
+                  <span>🧠 期待値思考（経営者）vs 積立消化思考（労働者）</span>
+                  <span style="font-size:0.78rem; color:var(--blue);">タップで開閉</span>
+                </div>
+                <p class="file-desc">なぜ組織運営で「過去の実績」や「固定された役割」を盾にする人間とズレが生じるのか</p>
+                <div class="note-detail">
+                  ・<strong>期待値思考</strong>：常に現在地は「ゼロベース」。今この瞬間に組織のボトルネックを解消し、最大の期待値を積むために何が必要かで動く。<br>
+                  ・<strong>積立消化思考</strong>：「過去にこれだけやったから新しい負荷は免除されるべき」と過去の労働を免罪符（ポイントカード）にする。<br>
+                  ・<strong>結論</strong>：人間の自発的なモチベーションに依存せず、「システムとAI・ルールが人を動かす仕組み」を作ることが唯一の解決策。
+                </div>
+              </div>
+
+              <div class="file-card" onclick="this.classList.toggle('expanded')" style="cursor:pointer;">
+                <div class="file-title">
+                  <span>👑 軍団マネジメント：運営と打ち子に求める必須能力</span>
+                  <span style="font-size:0.78rem; color:var(--blue);">タップで開閉</span>
+                </div>
+                <p class="file-desc">運営（人心掌握・資金管理・人材育成・情報統括・リスク管理・システム化）と打ち子の役割定義</p>
+                <div class="note-detail">
+                  ・<strong>運営（トップ）</strong>：現場稼働ではなく、システム化（データ統計・AIボット・期待値サイト）、人材募集と親の育成、キャッシュフローと不正リスク管理を担う。<br>
+                  ・<strong>打ち子</strong>：レア役を取りこぼさない正確性、回転速度、示唆確認、そして「打つ前・ヤメ時の絶対確認」を徹底する。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ③ 自己分析 フォルダの中身 -->
+          <div class="folder-view" id="folder-jiko">
+            <div class="folder-breadcrumb">
+              <span>🗂️ 資料＆データ &gt; 📁 自己分析</span>
+              <button class="mini-btn" onclick="openFolder('folder-root')">← フォルダ一覧へ戻る</button>
+            </div>
+            <div class="scroll-box tall">
+              <div class="file-card" onclick="this.classList.toggle('expanded')" style="cursor:pointer;">
+                <div class="file-title">
+                  <span>📊 コア思考特性・並列思考と期待値への徹底</span>
+                  <span style="font-size:0.78rem; color:var(--blue);">タップで開閉</span>
+                </div>
+                <p class="file-desc">感情や浪費ではなく「投資・消費・浪費」を明確に分け、長期的な読みと仕組み化で主導権を握るスタイル</p>
+                <div class="note-detail">
+                  ・目先の承認欲求や浪費ではなく、余裕資金と時間を「ツール開発・データ収集・自動化・資産運用」に投下してレバレッジをかける。<br>
+                  ・複数の事業・タスクを並列で組み立て、他人が代替できない技術・システムのオーナーシップを握ることで交渉の主導権を確保する。
+                </div>
+              </div>
+
+              <div class="file-card" onclick="this.classList.toggle('expanded')" style="cursor:pointer;">
+                <div class="file-title">
+                  <span>💡 組織運営の失敗と他力本願からの脱却</span>
+                  <span style="font-size:0.78rem; color:var(--blue);">タップで開閉</span>
+                </div>
+                <p class="file-desc">他人に「経営者目線の当事者意識」を期待せず、役割の線引きと仕組みでコントロールする教訓</p>
+                <div class="note-detail">
+                  ・「言わなくても分かってくれるはず」「相手も成長のために動いてくれるはず」という前提を捨て、最初の契約・役割分担とシステムによる自動化で摩擦を防ぐ。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ④ プレゼン資料 フォルダの中身（プレゼン資料・統計レポート一覧） -->
+          <div class="folder-view" id="folder-presen">
+            <div class="folder-breadcrumb">
+              <span>🗂️ 資料＆データ &gt; 📂 プレゼン資料・統計レポート一覧</span>
+              <button class="mini-btn" onclick="openFolder('folder-root')">← フォルダ一覧へ戻る</button>
+            </div>
+            <div class="scroll-box tall">
+              <a href="gundan-proposal.html" class="file-card featured">
+                <div class="file-title">
+                  <span>🎰 軍団運営・参画プレゼン資料（3つの貢献軸 ＆ 実戦統計デモ）</span>
+                  <span style="background:var(--blue); color:#0b1120; font-size:0.78rem; padding:3px 10px; border-radius:999px; white-space:nowrap;">開く →</span>
+                </div>
+                <p class="file-desc">
+                  ①軍団の規模の拡大 ②参考にする期待値 ③それを使う人の質 の3軸図解と、「終了履歴1,210件の負け台特定」「店舗別・沖ドキ560台実測」をまとめた相手提示用ページ
+                </p>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // =====================================================
+    // 1. Passcode Lock (2525) & Real-Time Cloud Sync
+    // =====================================================
+    const PASS_HASH = 'a1015d59b0457713';
+    const SESSION_KEY = 'personal_hub_unlocked_v1';
+    const PIN_STORAGE_KEY = 'personal_hub_pin_v1';
+    const CLOUD_SYNC_URL = 'https://n8n.srv1527372.hstgr.cloud/portal-sync';
+
+    function normalizePin(str) {
+      return (str || '').replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).trim();
+    }
+
+    function computePinHash(str) {
+      const hw = normalizePin(str);
+      let h1 = 2166136261 >>> 0;
+      let h2 = 16777619 >>> 0;
+      for (let i = 0; i < hw.length; i++) {
+        const c = hw.charCodeAt(i);
+        h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+        h2 = Math.imul(h2 ^ (c + 31), 2166136261) >>> 0;
+      }
+      return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+    }
+
+    function getActivePin() {
+      try {
+        return sessionStorage.getItem(PIN_STORAGE_KEY) || localStorage.getItem(PIN_STORAGE_KEY) || '';
+      } catch (_) {
+        return '';
+      }
+    }
+
+    function setSyncStatus(text, color) {
+      const el = document.getElementById('cloud-sync-badge');
+      if (!el) return;
+      el.textContent = text;
+      el.style.color = color || 'var(--green)';
+    }
+
+    function applyUnlockState(unlocked) {
+      document.getElementById('lock-overlay').classList.toggle('hidden', unlocked);
+      document.getElementById('app-content').classList.toggle('unlocked', unlocked);
+      if (unlocked) {
+        pullFromCloud(false);
+      } else {
+        const input = document.getElementById('lock-input');
+        if (input) {
+          input.value = '';
+          setTimeout(() => input.focus(), 50);
+        }
+      }
+    }
+
+    function handleUnlock(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('lock-input');
+      const pin = normalizePin(input.value);
+      if (computePinHash(pin) === PASS_HASH) {
+        try {
+          sessionStorage.setItem(SESSION_KEY, '1');
+          sessionStorage.setItem(PIN_STORAGE_KEY, pin);
+          localStorage.setItem(PIN_STORAGE_KEY, pin);
+        } catch (_) {}
+        applyUnlockState(true);
+      } else {
+        document.getElementById('lock-error').textContent = 'パスコードが違います';
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    function lockPage() {
+      try {
+        sessionStorage.removeItem(SESSION_KEY);
+      } catch (_) {}
+      applyUnlockState(false);
+    }
+
+    (function initLock() {
+      let isUnlocked = false;
+      try { isUnlocked = sessionStorage.getItem(SESSION_KEY) === '1'; } catch (_) {}
+      applyUnlockState(isUnlocked);
+
+      const input = document.getElementById('lock-input');
+      if (input) {
+        input.addEventListener('input', () => {
+          document.getElementById('lock-error').textContent = '';
+          const pin = normalizePin(input.value);
+          if (computePinHash(pin) === PASS_HASH) {
+            try {
+              sessionStorage.setItem(SESSION_KEY, '1');
+              sessionStorage.setItem(PIN_STORAGE_KEY, pin);
+              localStorage.setItem(PIN_STORAGE_KEY, pin);
+            } catch (_) {}
+            applyUnlockState(true);
+          }
+        });
+      }
+    })();
+
+    // =====================================================
+    // 2. Accordion & Folder Navigation
+    // =====================================================
+    function toggleAccordion(id) {
+      document.getElementById(id).classList.toggle('open');
+    }
+
+    function openFolder(viewId) {
+      document.querySelectorAll('#acc-folders .folder-view').forEach(v => {
+        v.classList.toggle('active', v.id === viewId);
+      });
+    }
+
+    function copyText(elId, btn) {
+      const text = document.getElementById(elId).textContent;
+      navigator.clipboard.writeText(text);
+      const old = btn.textContent;
+      btn.textContent = '✓ コピー完了';
+      setTimeout(() => { btn.textContent = old; }, 1200);
+    }
+
+    // =====================================================
+    // 3. Editable Routines & Tasks
+    // =====================================================
+    const STORAGE_ROUTINES = 'personal_hub_routines_v2';
+    const STORAGE_TASKS = 'personal_hub_tasks_v2';
+
+    const DEFAULT_ROUTINES = [
+      { id: 'r1', text: '👥 Xでの打ち子募集・スカウト連絡', done: false },
+      { id: 'r2', text: '📢 Xでのアプリ・プロダクト宣伝', done: false },
+      { id: 'r3', text: '🤖 AIボット会話ログ・新知識の確認', done: false },
+      { id: 'r4', text: '📝 期待値・やめ時問題集／ボーダー更新', done: false },
+      { id: 'r5', text: '📚 キオクラフト公式ストア教材の定期追加', done: false }
+    ];
+
+    const DEFAULT_TASKS = [
+      { id: 't1', text: '🤝 新軍団の運営参画交渉（3つの軸＋統計デモ提示）', done: false },
+      { id: 't2', text: '👥 軍団の稼働人数拡大（SNS募集導線）', done: false },
+      { id: 't3', text: '📊 店舗別・実戦ログ別の期待値統計の定期更新', done: false },
+      { id: 't4', text: '📈 分割投資・監視銘柄のチェック', done: false },
+      { id: 't5', text: '📝 攻略Note・軍団マネジメント記事の展開', done: false }
+    ];
+
+    function loadList(type) {
+      const key = type === 'routine' ? STORAGE_ROUTINES : STORAGE_TASKS;
+      const fallback = type === 'routine' ? DEFAULT_ROUTINES : DEFAULT_TASKS;
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+      return JSON.parse(JSON.stringify(fallback));
+    }
+
+    function saveList(type, list) {
+      const key = type === 'routine' ? STORAGE_ROUTINES : STORAGE_TASKS;
+      try { localStorage.setItem(key, JSON.stringify(list)); } catch (_) {}
+      renderList(type);
+      pushToCloud();
+    }
+
+    function renderList(type) {
+      const list = loadList(type);
+      const container = document.getElementById(type === 'routine' ? 'routine-list' : 'task-list');
+      const badge = document.getElementById(type === 'routine' ? 'routine-count' : 'task-count');
+      const doneCount = list.filter(item => item.done).length;
+      badge.textContent = `${doneCount} / ${list.length}`;
+
+      container.innerHTML = '';
+      list.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'task-row' + (item.done ? ' done' : '');
+
+        const label = document.createElement('label');
+        label.className = 'task-label';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!item.done;
+        cb.addEventListener('change', () => {
+          list[idx].done = cb.checked;
+          saveList(type, list);
+        });
+
+        const span = document.createElement('span');
+        span.className = 'task-text';
+        span.textContent = item.text;
+
+        label.appendChild(cb);
+        label.appendChild(span);
+
+        const actions = document.createElement('div');
+        actions.className = 'task-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'icon-btn';
+        editBtn.textContent = '✏️';
+        editBtn.title = '編集';
+        editBtn.addEventListener('click', () => {
+          const next = prompt('項目を編集:', item.text);
+          if (next !== null && next.trim() !== '') {
+            list[idx].text = next.trim();
+            saveList(type, list);
+          }
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'icon-btn del';
+        delBtn.textContent = '🗑️';
+        delBtn.title = '削除';
+        delBtn.addEventListener('click', () => {
+          list.splice(idx, 1);
+          saveList(type, list);
+        });
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        row.appendChild(label);
+        row.appendChild(actions);
+        container.appendChild(row);
+      });
+    }
+
+    function handleAddItem(e, type) {
+      e.preventDefault();
+      const input = document.getElementById(type === 'routine' ? 'routine-add-input' : 'task-add-input');
+      const val = input.value.trim();
+      if (!val) return;
+      const list = loadList(type);
+      list.push({ id: Date.now().toString(36), text: val, done: false });
+      input.value = '';
+      saveList(type, list);
+    }
+
+    function resetChecks(type) {
+      const list = loadList(type);
+      list.forEach(item => { item.done = false; });
+      saveList(type, list);
+    }
+
+    renderList('routine');
+    renderList('task');
+
+    // =====================================================
+    // 3-B. Editable Copy-Paste Snippets (よく使うコピペ)
+    // =====================================================
+    const STORAGE_COPYPASTE = 'personal_hub_copypaste_v1';
+    const DEFAULT_COPYPASTE = [
+      { id: 'cp1', title: '🔍 Discord終了検索（熱田キャッスル：指定なし）', body: 'during: 2026-11-25 in: 終了' },
+      { id: 'cp2', title: '🔍 Discord終了検索（若宮キング：~2）', body: 'during: 2026-11-25 in: 終了~2' },
+      { id: 'cp3', title: '🔍 Discord終了検索（北ゼン：~3）', body: 'during: 2026-11-25 in: 終了~3' },
+      { id: 'cp4', title: '🔍 Discord終了検索（マルハン上小田井：~4）', body: 'during: 2026-11-25 in: 終了~4' },
+      {
+        id: 'cp5',
+        title: '👤 打ち子募集・面談ヒアリングテンプレ',
+        body: 'xアカウント名: \n名前: \n現在の仕事: \n出勤日数: \n年齢: \n車の有無: \nスロット経験: \n軍団経験: \n現在軍団所属: \n住み: \n出禁店舗: \nいつから出勤？: '
+      },
+      {
+        id: 'cp6',
+        title: '💰 収支記録・終了報告テンプレ',
+        body: '総投資: \n人件費: \n換金: \nメダル: \n収支: '
+      }
+    ];
+
+    let editingCpId = null;
+
+    function loadCopyPaste() {
+      try {
+        const raw = localStorage.getItem(STORAGE_COPYPASTE);
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+      return JSON.parse(JSON.stringify(DEFAULT_COPYPASTE));
+    }
+
+    function saveCopyPasteArray(arr) {
+      try { localStorage.setItem(STORAGE_COPYPASTE, JSON.stringify(arr)); } catch (_) {}
+      renderCopyPaste();
+      pushToCloud();
+    }
+
+    function saveCopyPaste() {
+      const titleInput = document.getElementById('cp-title-input');
+      const bodyInput = document.getElementById('cp-body-input');
+      const statusEl = document.getElementById('cp-status');
+      const title = titleInput.value.trim() || '無題のコピペ';
+      const body = bodyInput.value;
+      if (!body.trim()) return;
+
+      const list = loadCopyPaste();
+      if (editingCpId) {
+        const idx = list.findIndex(item => item.id === editingCpId);
+        if (idx !== -1) {
+          list[idx].title = title;
+          list[idx].body = body;
+        }
+        cancelEditCopyPaste();
+      } else {
+        list.push({
+          id: 'cp_' + Date.now().toString(36),
+          title,
+          body
+        });
+        titleInput.value = '';
+        bodyInput.value = '';
+      }
+      saveCopyPasteArray(list);
+      statusEl.textContent = '✓ 保存しました';
+    }
+
+    function startEditCopyPaste(id) {
+      const list = loadCopyPaste();
+      const target = list.find(item => item.id === id);
+      if (!target) return;
+      editingCpId = id;
+      document.getElementById('cp-title-input').value = target.title;
+      document.getElementById('cp-body-input').value = target.body;
+      document.getElementById('cp-save-btn').textContent = '💾 更新して保存';
+      document.getElementById('cp-cancel-btn').style.display = '';
+      document.getElementById('cp-title-input').focus();
+    }
+
+    function cancelEditCopyPaste() {
+      editingCpId = null;
+      document.getElementById('cp-title-input').value = '';
+      document.getElementById('cp-body-input').value = '';
+      document.getElementById('cp-save-btn').textContent = '＋ コピペを追加';
+      document.getElementById('cp-cancel-btn').style.display = 'none';
+    }
+
+    function deleteCopyPaste(id) {
+      const list = loadCopyPaste().filter(item => item.id !== id);
+      saveCopyPasteArray(list);
+    }
+
+    function renderCopyPaste() {
+      const list = loadCopyPaste();
+      const container = document.getElementById('copypaste-list');
+      const badge = document.getElementById('copypaste-count');
+      badge.textContent = `${list.length} 件`;
+      container.innerHTML = '';
+
+      list.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'memo-card';
+
+        const head = document.createElement('div');
+        head.className = 'memo-card-head';
+
+        const tSpan = document.createElement('span');
+        tSpan.className = 'memo-card-title';
+        tSpan.style.fontSize = '0.88rem';
+        tSpan.textContent = item.title;
+
+        const actions = document.createElement('div');
+        actions.className = 'task-actions';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.textContent = '📋 コピー';
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(item.body);
+          copyBtn.textContent = '✓ コピー完了';
+          setTimeout(() => { copyBtn.textContent = '📋 コピー'; }, 1200);
+        });
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'icon-btn';
+        editBtn.textContent = '✏️';
+        editBtn.title = '編集';
+        editBtn.addEventListener('click', () => startEditCopyPaste(item.id));
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'icon-btn del';
+        delBtn.textContent = '🗑️';
+        delBtn.title = '削除';
+        delBtn.addEventListener('click', () => deleteCopyPaste(item.id));
+
+        actions.appendChild(copyBtn);
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        head.appendChild(tSpan);
+        head.appendChild(actions);
+
+        const codeBox = document.createElement('div');
+        codeBox.className = 'code-box';
+        codeBox.style.marginBottom = '0';
+        const pre = document.createElement('div');
+        pre.className = 'code-pre';
+        pre.style.color = '#38bdf8';
+        pre.textContent = item.body;
+        codeBox.appendChild(pre);
+
+        card.appendChild(head);
+        card.appendChild(codeBox);
+        container.appendChild(card);
+      });
+    }
+
+    renderCopyPaste();
+
+    // =====================================================
+    // 4. Memo Pad (Input / Save / Edit / Delete + AI File Export)
+    // =====================================================
+    const STORAGE_MEMOS = 'personal_hub_memos_v1';
+    const DEFAULT_MEMOS = [
+      {
+        id: 'm1',
+        title: '🌺 沖ドキ（ゴージャス / BLACK）実測ボーダー早見メモ',
+        body: '・ゴージャス：朝0〜70G（116.2%）鉄板。朝70G単発後の2回目は200G〜（107.5%）/ 250G〜（108.1%）から即確保OK。\n・BLACK：天国平均枚数が約300枚少ないため、朝70G単発後の2回目は200〜250Gを避け300G〜に絞る。',
+        updatedAt: '2026-11-25 02:20'
+      },
+      {
+        id: 'm2',
+        title: '📝 開始・終了報告の標準フォーマット規定',
+        body: '・開始報告：機種名 台番 根拠パラメータ 現在G数 持ちメダル〜\n・終了報告：機種名(台番) / 投資〇本 / 総投資〇本 / 開始〜終了枚',
+        updatedAt: '2026-11-25 02:20'
+      }
+    ];
+
+    let editingMemoId = null;
+
+    function loadMemos() {
+      try {
+        const raw = localStorage.getItem(STORAGE_MEMOS);
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+      return JSON.parse(JSON.stringify(DEFAULT_MEMOS));
+    }
+
+    function saveMemosArray(arr) {
+      try { localStorage.setItem(STORAGE_MEMOS, JSON.stringify(arr)); } catch (_) {}
+      renderMemos();
+      pushToCloud();
+    }
+
+    function nowStr() {
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function saveMemo() {
+      const titleInput = document.getElementById('memo-title');
+      const bodyInput = document.getElementById('memo-body');
+      const statusEl = document.getElementById('memo-status');
+      const title = titleInput.value.trim() || '無題のメモ';
+      const body = bodyInput.value.trim();
+      if (!body && !titleInput.value.trim()) return;
+
+      const memos = loadMemos();
+      if (editingMemoId) {
+        const idx = memos.findIndex(m => m.id === editingMemoId);
+        if (idx !== -1) {
+          memos[idx].title = title;
+          memos[idx].body = body;
+          memos[idx].updatedAt = nowStr();
+        }
+        cancelEditMemo();
+      } else {
+        memos.unshift({
+          id: 'm_' + Date.now().toString(36),
+          title,
+          body,
+          updatedAt: nowStr()
+        });
+        titleInput.value = '';
+        bodyInput.value = '';
+      }
+      saveMemosArray(memos);
+      statusEl.textContent = '✓ 保存しました（AIに読ませる時は「🤖 AI用ファイル保存」を押してください）';
+    }
+
+    function startEditMemo(id) {
+      const memos = loadMemos();
+      const target = memos.find(m => m.id === id);
+      if (!target) return;
+      editingMemoId = id;
+      document.getElementById('memo-title').value = target.title;
+      document.getElementById('memo-body').value = target.body;
+      document.getElementById('memo-save-btn').textContent = '💾 更新して保存';
+      document.getElementById('memo-cancel-btn').style.display = '';
+      document.getElementById('memo-title').focus();
+    }
+
+    function cancelEditMemo() {
+      editingMemoId = null;
+      document.getElementById('memo-title').value = '';
+      document.getElementById('memo-body').value = '';
+      document.getElementById('memo-save-btn').textContent = '💾 メモを保存';
+      document.getElementById('memo-cancel-btn').style.display = 'none';
+    }
+
+    function deleteMemo(id) {
+      const memos = loadMemos().filter(m => m.id !== id);
+      saveMemosArray(memos);
+    }
+
+    function renderMemos() {
+      const memos = loadMemos();
+      const container = document.getElementById('memo-list');
+      container.innerHTML = '';
+      if (memos.length === 0) {
+        container.innerHTML = '<p style="font-size:0.85rem; color:var(--muted); padding:8px;">保存されたメモはまだありません。</p>';
+        return;
+      }
+      memos.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'memo-card';
+
+        const head = document.createElement('div');
+        head.className = 'memo-card-head';
+
+        const titleWrap = document.createElement('div');
+        const tSpan = document.createElement('span');
+        tSpan.className = 'memo-card-title';
+        tSpan.textContent = m.title;
+        const dSpan = document.createElement('span');
+        dSpan.className = 'memo-card-date';
+        dSpan.textContent = m.updatedAt || '';
+        titleWrap.appendChild(tSpan);
+        titleWrap.appendChild(dSpan);
+
+        const actions = document.createElement('div');
+        actions.className = 'task-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'icon-btn';
+        editBtn.textContent = '✏️ 編集';
+        editBtn.addEventListener('click', () => startEditMemo(m.id));
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'icon-btn del';
+        delBtn.textContent = '🗑️';
+        delBtn.addEventListener('click', () => deleteMemo(m.id));
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        head.appendChild(titleWrap);
+        head.appendChild(actions);
+
+        const body = document.createElement('div');
+        body.className = 'memo-card-body';
+        body.textContent = m.body;
+
+        card.appendChild(head);
+        card.appendChild(body);
+        container.appendChild(card);
+      });
+    }
+
+    renderMemos();
+
+    // =====================================================
+    // 4-B. Real-Time Cloud Sync (PC ⇔ Smartphone ⇔ AI)
+    // =====================================================
+    async function pullFromCloud(showNotice) {
+      const pin = getActivePin();
+      if (!pin) return;
+      try {
+        if (showNotice) setSyncStatus('🔄 同期中...', 'var(--amber)');
+        const res = await fetch(CLOUD_SYNC_URL, {
+          method: 'GET',
+          headers: { 'X-Portal-Pin': pin }
+        });
+        if (!res.ok) throw new Error('status ' + res.status);
+        const data = await res.json();
+        if (Array.isArray(data.routines)) localStorage.setItem(STORAGE_ROUTINES, JSON.stringify(data.routines));
+        if (Array.isArray(data.tasks)) localStorage.setItem(STORAGE_TASKS, JSON.stringify(data.tasks));
+        if (Array.isArray(data.copypaste)) localStorage.setItem(STORAGE_COPYPASTE, JSON.stringify(data.copypaste));
+        if (Array.isArray(data.memos)) localStorage.setItem(STORAGE_MEMOS, JSON.stringify(data.memos));
+        renderList('routine');
+        renderList('task');
+        renderCopyPaste();
+        renderMemos();
+        setSyncStatus('☁️ リアルタイム同期済', 'var(--green)');
+      } catch (err) {
+        setSyncStatus('⚠️ オフライン保存中', 'var(--amber)');
+      }
+    }
+
+    async function pushToCloud() {
+      const pin = getActivePin();
+      if (!pin) return;
+      try {
+        setSyncStatus('🔄 クラウド保存中...', 'var(--amber)');
+        const payload = {
+          updatedAt: nowStr(),
+          routines: loadList('routine'),
+          tasks: loadList('task'),
+          copypaste: loadCopyPaste(),
+          memos: loadMemos()
+        };
+        const res = await fetch(CLOUD_SYNC_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Portal-Pin': pin
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('status ' + res.status);
+        setSyncStatus('☁️ クラウド保存完了', 'var(--green)');
+      } catch (err) {
+        setSyncStatus('⚠️ ローカル保存済', 'var(--amber)');
+      }
+    }
+
+    window.addEventListener('focus', () => {
+      try {
+        if (sessionStorage.getItem(SESSION_KEY) === '1') pullFromCloud(false);
+      } catch (_) {}
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        try {
+          if (sessionStorage.getItem(SESSION_KEY) === '1') pullFromCloud(false);
+        } catch (_) {}
+      }
+    });
+
+    // =====================================================
+    // 5. Export Markdown for AI Agent (Antigravity / SaberBot)
+    // =====================================================
+    async function exportAllDataForAI() {
+      const routines = loadList('routine');
+      const tasks = loadList('task');
+      const copypastes = loadCopyPaste();
+      const memos = loadMemos();
+
+      const lines = [
+        '# Personal Hub 保存データ（AIエージェント参照用）',
+        '',
+        `更新日時: ${nowStr()}`,
+        '',
+        '## 1. ルーティン',
+        ...routines.map(r => `- [${r.done ? 'x' : ' '}] ${r.text}`),
+        '',
+        '## 2. タスク',
+        ...tasks.map(t => `- [${t.done ? 'x' : ' '}] ${t.text}`),
+        '',
+        '## 3. よく使うコピペ',
+        ...copypastes.flatMap(c => [`### ${c.title}`, '```text', c.body, '```', '']),
+        '## 4. メモ帳',
+        ''
+      ];
+
+      memos.forEach(m => {
+        lines.push(`### ${m.title} (${m.updatedAt || ''})`);
+        lines.push(m.body);
+        lines.push('');
+      });
+
+      const mdContent = lines.join('\n');
+
+      // Use File System Access API if supported so user can directly overwrite 個人用wiki/inbox/portal_memos.md
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: 'portal_memos.md',
+            types: [{ description: 'Markdown File', accept: { 'text/markdown': ['.md'] } }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(mdContent);
+          await writable.close();
+          alert('AI参照用Markdownファイルを保存しました！');
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      // Fallback download
+      const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'portal_memos.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

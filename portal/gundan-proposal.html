@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>軍団運営プレゼン資料 | 3つの貢献軸と実戦統計サンプル</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #151f32;
+      --surface-2: #1e293b;
+      --border: #2e3f5c;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --sub: #cbd5e1;
+      --blue: #38bdf8;
+      --amber: #f59e0b;
+      --green: #10b981;
+      --red: #f43f5e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding-bottom: 64px;
+    }
+    a { color: var(--blue); text-decoration: none; }
+
+    /* Passcode Lock Overlay */
+    #app-content { display: none; }
+    #app-content.unlocked { display: block; }
+    .lock-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: radial-gradient(circle at 50% 25%, #162238 0%, #0b1120 75%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .lock-overlay.hidden { display: none; }
+    .lock-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+    }
+    .lock-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(56, 189, 248, 0.14);
+      color: var(--blue);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 14px;
+    }
+    .lock-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+    .lock-desc { font-size: 0.84rem; color: var(--muted); margin-bottom: 18px; }
+    .lock-input {
+      width: 100%;
+      background: #070b14;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #fff;
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: 0.35em;
+      text-align: center;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    .lock-input:focus { border-color: var(--blue); }
+    .lock-error { color: #fda4af; font-size: 0.82rem; font-weight: 700; min-height: 20px; margin-bottom: 8px; }
+    .lock-btn {
+      width: 100%;
+      background: var(--blue);
+      color: #0b1120;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.96rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* Header & Tabs */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 17, 32, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px 0;
+    }
+    .header-inner { max-width: 980px; margin: 0 auto; }
+    .title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-2);
+      color: var(--sub);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      color: #fff;
+      border-color: var(--blue);
+      text-decoration: none;
+    }
+    .brand {
+      font-size: 1.05rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-bottom: 3px solid transparent;
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+
+    .container { max-width: 980px; margin: 24px auto 0; padding: 0 16px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .hero-banner {
+      background: linear-gradient(135deg, #162238 0%, #0f172a 100%);
+      border: 1px solid var(--blue);
+      border-radius: 18px;
+      padding: 24px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+    .pill-tag {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+    .tag-blue { background: rgba(56, 189, 248, 0.16); color: var(--blue); }
+    .tag-amber { background: rgba(245, 158, 11, 0.16); color: var(--amber); }
+
+    .hero-title { font-size: 1.45rem; font-weight: 800; margin-bottom: 10px; line-height: 1.4; }
+    .hero-lead { font-size: 0.98rem; color: var(--sub); }
+    .hero-lead strong {
+      color: #fff;
+      background: rgba(56, 189, 248, 0.18);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 760px) { .pillars-grid { grid-template-columns: 1fr; } }
+    .pillar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .pillar-card.p-1 { border-top: 4px solid var(--blue); }
+    .pillar-card.p-2 { border-top: 4px solid var(--amber); }
+    .pillar-card.p-3 { border-top: 4px solid var(--green); }
+    .pillar-head { display: flex; align-items: center; gap: 10px; }
+    .pillar-badge {
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 6px;
+      color: #0b1120;
+    }
+    .b-1 { background: var(--blue); }
+    .b-2 { background: var(--amber); }
+    .b-3 { background: var(--green); }
+    .pillar-title { font-size: 1.12rem; font-weight: 800; }
+    .pillar-sub { font-size: 0.85rem; color: var(--muted); margin-top: -6px; }
+    .action-item {
+      background: rgba(11, 17, 32, 0.55);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .action-title { font-size: 0.95rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .action-desc { font-size: 0.85rem; color: var(--sub); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 20px;
+      margin-bottom: 24px;
+    }
+    .card-head {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+    .card-title { font-size: 1.22rem; font-weight: 800; }
+    .sub-heading { font-size: 1.02rem; font-weight: 800; margin: 20px 0 10px; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr; } }
+    .kpi-box {
+      background: rgba(11, 17, 32, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .kpi-label { font-size: 0.8rem; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+    .kpi-val { font-size: 1.3rem; font-weight: 800; }
+    .kpi-note { font-size: 0.78rem; color: var(--sub); margin-top: 4px; }
+    .c-red { color: #fda4af; }
+    .c-green { color: #6ee7b7; }
+    .c-amber { color: #fde047; }
+
+    .bar-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .bar-row {
+      background: rgba(11, 17, 32, 0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .bar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .bar-meta { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+    .bar-track { width: 100%; height: 8px; background: rgba(255,255,255,0.07); border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; }
+    .fill-red { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-bottom: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-width: 560px; }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      padding: 9px 10px;
+      text-align: center;
+    }
+    th:last-child, td:last-child { border-right: none; }
+    tr:last-child td { border-bottom: none; }
+    th { background: rgba(11, 17, 32, 0.85); color: var(--sub); font-weight: 700; }
+    td.left { text-align: left; font-weight: 700; }
+    .cell-loss { color: #fda4af; font-weight: 800; background: rgba(244, 63, 94, 0.12); }
+    .cell-win { color: #6ee7b7; font-weight: 800; background: rgba(16, 185, 129, 0.12); }
+    .cell-warn { color: #fde047; font-weight: 700; }
+
+    .callout {
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 4px solid var(--blue);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.88rem;
+      color: var(--sub);
+      margin-bottom: 16px;
+    }
+    .callout.amber { background: rgba(245, 158, 11, 0.08); border-left-color: var(--amber); }
+    .callout strong { color: #fff; }
+
+    .copy-btn {
+      background: var(--blue);
+      color: #0b1120;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.86rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Passcode Lock Screen -->
+  <div class="lock-overlay" id="lock-overlay">
+    <div class="lock-card">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-title">資料ロック中</div>
+      <p class="lock-desc">閲覧するにはパスコードを入力してください</p>
+      <form id="lock-form" onsubmit="handleUnlock(event)">
+        <input type="password" id="lock-input" class="lock-input" inputmode="numeric" placeholder="••••" autocomplete="off" autofocus>
+        <div class="lock-error" id="lock-error"></div>
+        <button type="submit" class="lock-btn">ロック解除</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-content">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="title-bar">
+          <div class="brand">
+            <span class="brand-dot"></span>
+            <span>軍団運営・貢献できる3つの軸 ＆ 実戦統計サンプル</span>
+          </div>
+          <a href="index.html" class="back-link">← トップページへ戻る</a>
+        </div>
+        <nav class="tabs">
+          <button class="tab-btn active" data-tab="tab-proposal">📊 1. 貢献できる「3つの軸」</button>
+          <button class="tab-btn" data-tab="tab-sample1">📉 2. 統計実例①：打った台の勝ち負け分析</button>
+          <button class="tab-btn" data-tab="tab-sample2">🌺 3. 統計実例②：店舗別の沖ドキ560台実測</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- TAB 1 -->
+      <section class="tab-panel active" id="tab-proposal">
+        <div class="hero-banner">
+          <span class="pill-tag tag-blue">軍団運営で貢献できること</span>
+          <h1 class="hero-title">軍団の勝ち額を増やす「3つの軸」</h1>
+          <p class="hero-lead">
+            簡単に言うと、<strong>① 軍団の規模の拡大</strong>・<strong>② 参考にする期待値</strong>・<strong>③ それを使う人の質</strong> の3つの軸をまとめて引き上げることができます。
+          </p>
+        </div>
+
+        <div class="pillars-grid">
+          <div class="pillar-card p-1">
+            <div class="pillar-head">
+              <span class="pillar-badge b-1">軸 ①</span>
+              <h2 class="pillar-title">軍団の規模の拡大</h2>
+            </div>
+            <p class="pillar-sub">人を増やして、1日に回せる台数を増やす</p>
+            <div class="action-item">
+              <div class="action-title">★ SNSでの打ち子募集</div>
+              <div class="action-desc">X（旧Twitter）などを使って新しく稼働できる人を継続的に集め、軍団の人数を増やします。</div>
+            </div>
+            <div class="action-item">
+              <div class="action-title">★ コミュニティ（Discord）運営</div>
+              <div class="action-desc">人が増えても報告がゴチャゴチャにならないようチャンネルや書き方のルールを整え、毎日の集計や管理がスムーズに回るようにします。</div>
+            </div>
+          </div>
+
+          <div class="pillar-card p-2">
+            <div class="pillar-head">
+              <span class="pillar-badge b-2">軸 ②</span>
+              <h2 class="pillar-title">参考にする期待値</h2>
+            </div>
+            <p class="pillar-sub">勝てるデータと専用サイトで勝率を上げる</p>
+            <div class="action-item">
+              <div class="action-title">★ サイトセブン等のボット回避スクレイピング</div>
+              <div class="action-desc">普通のツールでは弾かれるホールデータを自動で抜き出し、手で調べたら何時間もかかる「店のクセ・リセット状況・イベ日の出玉傾向」を一気に集めます。</div>
+            </div>
+            <div class="action-item">
+              <div class="action-title">★ 実地統計（店舗調査 ＆ 打った台の統計）</div>
+              <div class="action-desc">店舗へ見に行って取る統計と、軍団が打った台の履歴から「実はトータルで大きく負けてる赤字台」を数字で特定して無駄なマイナスを止めます。</div>
+            </div>
+            <div class="action-item">
+              <div class="action-title">★ 期待値クローンサイトを無料提供</div>
+              <div class="action-desc">有料サイトと同じ細かい条件別の狙い目・機械割データをスマホですぐ見られる専用サイトを、軍団メンバー全員に無料で提供します。</div>
+            </div>
+          </div>
+
+          <div class="pillar-card p-3">
+            <div class="pillar-head">
+              <span class="pillar-badge b-3">軸 ③</span>
+              <h2 class="pillar-title">それを使う人の質</h2>
+            </div>
+            <p class="pillar-sub">打ち子・班長の判断力を上げてミスを無くす</p>
+            <div class="action-item">
+              <div class="action-title">★ 打ち子への期待値・立ち回り教育</div>
+              <div class="action-desc">「どこから打つか・どこでヤメるか・何を報告するか」を分かりやすく教え、勝手な深追いや早ヤメなどのミスを減らします。</div>
+            </div>
+            <div class="action-item">
+              <div class="action-title">★ 班長（親）への立ち回り共有 ＆ AI補助</div>
+              <div class="action-desc">細かい条件ごとのボーダー判断や効率の良い指示の出し方を共有します。AIボットも活用できるため、班長が質問返信に張り付く負担も減らせます。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="pill-tag tag-amber">実例データ</span>
+            <h2 class="card-title">実際に取った統計データのサンプル（2種類）</h2>
+          </div>
+          <p style="color:var(--sub); font-size:0.93rem; margin-bottom:14px;">
+            下のボタンから、実際に稼働ログやホールデータから算出した統計サンプルをご覧いただけます。
+          </p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="copy-btn" onclick="switchTab('tab-sample1')">📉 統計実例①（打った台からの負け台特定）を見る →</button>
+            <button class="copy-btn" style="background:var(--amber);" onclick="switchTab('tab-sample2')">🌺 統計実例②（店舗別・沖ドキ560台実測）を見る →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2 -->
+      <section class="tab-panel" id="tab-sample1">
+        <div class="card">
+          <div class="card-head">
+            <span class="pill-tag tag-blue">サンプル ①：打った台からの統計（匿名デモ）</span>
+            <h2 class="card-title">Discord終了履歴（4ヶ月・全1,210件）からの「勝ち台・負け台」特定</h2>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-box">
+              <div class="kpi-label">解析した終了報告数</div>
+              <div class="kpi-val">1,210 件</div>
+              <div class="kpi-note">共有メダル移動を除外し、現金投資本数をすべて反映</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">ワースト6機種の合計赤字</div>
+              <div class="kpi-val c-red">約 -52.0 万円</div>
+              <div class="kpi-note">実質 -23,942枚（勝率わずか 7%〜16%）</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">主力トップ6機種の合計黒字</div>
+              <div class="kpi-val c-green">約 +216.2 万円</div>
+              <div class="kpi-note">実質 +99,454枚（赤字機種を止めるだけで利益直結）</div>
+            </div>
+          </div>
+
+          <div class="callout">
+            <strong>💡 この統計で分かること：</strong><br>
+            1. <strong>「みんな打っているけど、実は軍団の金を溶かしている赤字機種」</strong>が数字でハッキリ出ます（下位6機種をストップするだけで4ヶ月で約52万円の改善）。<br>
+            2. <strong>「カード枚数はプラスに見えるのに、現金投資を引くと実は赤字の罠台」</strong>も見抜けます（例：『北斗（無印）』はカード増減だけ見ると <strong>+7,948枚</strong> ですが、現金投資 <strong>182本</strong> を差し引くと <strong>実質 -424枚</strong> で全く儲かっていませんでした）。
+          </div>
+
+          <h3 class="sub-heading">📉 負けている機種ワースト6（視覚グラフ ＆ 実測内訳）</h3>
+          <div class="bar-list">
+            <div class="bar-row">
+              <div class="bar-top">
+                <span>1位：ヤバチバ / チバリヨ <span class="bar-meta">（14回：2勝12敗｜投資10本｜カード-4,681枚）</span></span>
+                <span class="c-red">-5,141枚（約 -11.2万円）</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill fill-red" style="width: 100%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-top">
+                <span>2位：真打吉宗 <span class="bar-meta">（9回：1勝8敗｜投資50本｜カード-2,252枚）</span></span>
+                <span class="c-red">-4,552枚（約 -9.9万円）</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill fill-red" style="width: 88%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-top">
+                <span>3位：スマスロ とある2 <span class="bar-meta">（32回：4勝28敗｜投資3本｜カード-3,728枚）</span></span>
+                <span class="c-red">-3,866枚（約 -8.4万円）</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill fill-red" style="width: 75%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-top">
+                <span>4位：L ToLOVEる（トランス他） <span class="bar-meta">（10回：3勝7敗｜投資37本｜カード-1,929枚）</span></span>
+                <span class="c-red">-3,631枚（約 -7.9万円）</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill fill-red" style="width: 71%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-top">
+                <span>5位：L戦国乙女5 <span class="bar-meta">（30回：5勝25敗｜投資10本｜カード-3,148枚）</span></span>
+                <span class="c-red">-3,608枚（約 -7.8万円）</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill fill-red" style="width: 70%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-top">
+                <span>6位：からくりサーカス2 <span class="bar-meta">（14回：1勝13敗｜投資3本｜カード-3,006枚）</span></span>
+                <span class="c-red">-3,144枚（約 -6.8万円）</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill fill-red" style="width: 61%;"></div></div>
+            </div>
+          </div>
+
+          <h3 class="sub-heading">📈 大きく勝っている主力機種トップ6（全1,210件中）</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>順位</th>
+                  <th>機種名</th>
+                  <th>稼働回数（勝敗）</th>
+                  <th>現金投資</th>
+                  <th>カード枚数増減</th>
+                  <th>実質差枚（46枚換算）</th>
+                  <th>実質収支（概算）</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>1位</strong></td>
+                  <td class="left">L北斗の拳 転生の章2</td>
+                  <td>471回 (132勝338敗)</td>
+                  <td>1,296.0本</td>
+                  <td>+96,144枚</td>
+                  <td class="cell-win">+36,528枚</td>
+                  <td class="cell-win">約 +79.4万円</td>
+                </tr>
+                <tr>
+                  <td><strong>2位</strong></td>
+                  <td class="left">L東京喰種</td>
+                  <td>79回 (45勝34敗)</td>
+                  <td>164.0本</td>
+                  <td>+30,684枚</td>
+                  <td class="cell-win">+23,140枚</td>
+                  <td class="cell-win">約 +50.3万円</td>
+                </tr>
+                <tr>
+                  <td><strong>3位</strong></td>
+                  <td class="left">沖ドキ！DUO</td>
+                  <td>47回 (18勝29敗)</td>
+                  <td>221.0本</td>
+                  <td>+22,100枚</td>
+                  <td class="cell-win">+11,934枚</td>
+                  <td class="cell-win">約 +25.9万円</td>
+                </tr>
+                <tr>
+                  <td><strong>4位</strong></td>
+                  <td class="left">カバネリ海門決戦</td>
+                  <td>22回 (14勝8敗)</td>
+                  <td>32.0本</td>
+                  <td>+12,470枚</td>
+                  <td class="cell-win">+10,998枚</td>
+                  <td class="cell-win">約 +23.9万円</td>
+                </tr>
+                <tr>
+                  <td><strong>5位</strong></td>
+                  <td class="left">スマスロ シャーマンキング</td>
+                  <td>8回 (2勝6敗)</td>
+                  <td>28.0本</td>
+                  <td>+10,248枚</td>
+                  <td class="cell-win">+8,960枚</td>
+                  <td class="cell-win">約 +19.5万円</td>
+                </tr>
+                <tr>
+                  <td><strong>6位</strong></td>
+                  <td class="left">スマスロ モンハン系</td>
+                  <td>29回 (12勝17敗)</td>
+                  <td>30.0本</td>
+                  <td>+9,274枚</td>
+                  <td class="cell-win">+7,894枚</td>
+                  <td class="cell-win">約 +17.2万円</td>
+                </tr>
+                <tr>
+                  <td><strong>罠台例</strong></td>
+                  <td class="left">スマスロ北斗の拳（無印）</td>
+                  <td>69回 (26勝42敗)</td>
+                  <td class="cell-warn">182.0本</td>
+                  <td class="cell-win">+7,948枚</td>
+                  <td class="cell-loss">-424枚</td>
+                  <td class="cell-loss">約 -0.9万円</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3 -->
+      <section class="tab-panel" id="tab-sample2">
+        <div class="card">
+          <div class="card-head">
+            <span class="pill-tag tag-amber">サンプル ②：店舗ごとの沖ドキ実地・データ統計（匿名デモ）</span>
+            <h2 class="card-title">2店舗（A店・B店）の沖ドキ ゴージャス＆BLACK 計560台分の実測期待値</h2>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-box">
+              <div class="kpi-label">自動収集した実測サンプル数</div>
+              <div class="kpi-val">560 台分</div>
+              <div class="kpi-note">A店（342台分）・B店（217台分）の全履歴</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">朝70G単発後の「次回天国率」</div>
+              <div class="kpi-val c-amber">40.3 %</div>
+              <div class="kpi-note">約2.5回に1回が次回天国に移行（チャンスモード濃厚）</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">天国1回の平均獲得枚数差</div>
+              <div class="kpi-val c-green">約 300 枚差</div>
+              <div class="kpi-note">ゴージャス平均 1,235枚 ＞ BLACK平均 943枚</div>
+            </div>
+          </div>
+
+          <div class="callout amber">
+            <strong>💡 この統計で分かったこと（ネットの一般論では分からない店舗差）：</strong><br>
+            1. <strong>「同じ朝70Gまでのカニ歩きでも、店と機種で結果が真逆になる」</strong><br>
+            　・<strong>A店</strong>では『ゴージャス』も『BLACK』も朝0〜70Gでしっかりプラス（機械割108.6%〜119.8%）。<br>
+            　・しかし<strong>B店</strong>では、『ゴージャス』は機械割 <strong>117.5%（1台+1,293円）</strong> と激甘なのに対し、<strong>『BLACK』の32〜70Gは機械割 92.0%（1台-264円）で打つほど負けるマイナス区間</strong>でした。<br>
+            2. <strong>「朝70G単発後の2回目狙い」もゴージャスとBLACKでボーダーが大きく変わる</strong><br>
+            　・天国1回の獲得枚数が約300枚違うため、<strong>ゴージャスは200G〜（機械割107.5%）から即確保OK</strong>なのに対し、<strong>BLACKは300G〜まで待たないと割が合わない</strong>ことが実測で判明しました。
+          </div>
+
+          <h3 class="sub-heading">① 店舗別・朝イチ区間別（0〜32G / 32〜70G / 0〜70G通し）の実測期待値・機械割</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>店舗（匿名）</th>
+                  <th>朝イチ区間</th>
+                  <th>沖ドキ！ゴージャス<br>（1台期待値 / 機械割）</th>
+                  <th>沖ドキ！ＢＬＡＣＫ<br>（1台期待値 / 機械割）</th>
+                  <th>2機種合算</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td rowspan="3" class="left">🏢 A店<br>（342台分）</td>
+                  <td>① 0〜32G（リセ32G）</td>
+                  <td class="cell-win">+772円（119.8%）🔥</td>
+                  <td class="cell-win">+368円（110.6%）🔥</td>
+                  <td>+620円（116.6%）</td>
+                </tr>
+                <tr>
+                  <td>② 32〜70G（70Gカニ）</td>
+                  <td class="cell-win">+403円（110.2%）🔥</td>
+                  <td class="cell-win">+237円（106.2%）</td>
+                  <td>+340円（108.8%）</td>
+                </tr>
+                <tr>
+                  <td>③ 0〜70G通し</td>
+                  <td class="cell-win">+1,091円（115.5%）🔥</td>
+                  <td class="cell-win">+558円（108.6%）</td>
+                  <td>+892円（113.0%）</td>
+                </tr>
+                <tr>
+                  <td rowspan="3" class="left">🏢 B店<br>（217台分）</td>
+                  <td>① 0〜32G（リセ32G）</td>
+                  <td class="cell-win">+623円（117.2%）🔥</td>
+                  <td class="cell-warn">+9円（100.3%）⚠️</td>
+                  <td>+324円（109.6%）</td>
+                </tr>
+                <tr>
+                  <td>② 32〜70G（70Gカニ）</td>
+                  <td class="cell-win">+797円（117.9%）🔥</td>
+                  <td class="cell-loss">-264円（92.0%）💀</td>
+                  <td>+294円（107.5%）</td>
+                </tr>
+                <tr>
+                  <td>③ 0〜70G通し</td>
+                  <td class="cell-win">+1,293円（117.5%）🔥</td>
+                  <td class="cell-loss">-195円（96.6%）💀</td>
+                  <td>+573円（108.7%）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="sub-heading">② 朝0〜70G当選時の「天国移行率」と「平均獲得枚数」（全559台分）</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>店舗・機種</th>
+                  <th>朝0〜70G当選率</th>
+                  <th>① 1回目の即天国率</th>
+                  <th>② 単発後の次回天国率</th>
+                  <th>③ 2回目までの天国到達</th>
+                  <th>天国1回の平均枚数</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="left">A店・ゴージャス（214台）</td>
+                  <td>41.1%</td>
+                  <td>23.9%</td>
+                  <td>38.8%</td>
+                  <td>53.4%</td>
+                  <td class="cell-win">1,309 枚（7.6連）</td>
+                </tr>
+                <tr>
+                  <td class="left">A店・ＢＬＡＣＫ（128台）</td>
+                  <td>41.4%</td>
+                  <td>28.3%</td>
+                  <td>36.8%</td>
+                  <td>54.7%</td>
+                  <td>912 枚（5.2連）</td>
+                </tr>
+                <tr>
+                  <td class="left">B店・ゴージャス（112台）</td>
+                  <td>35.7%</td>
+                  <td class="cell-win">37.5%</td>
+                  <td class="cell-win">52.0%</td>
+                  <td class="cell-win">70.0%</td>
+                  <td class="cell-win">1,132 枚（6.7連）</td>
+                </tr>
+                <tr>
+                  <td class="left">B店・ＢＬＡＣＫ（105台）</td>
+                  <td>34.3%</td>
+                  <td class="cell-loss">19.4%</td>
+                  <td>37.9%</td>
+                  <td>50.0%</td>
+                  <td>1,011 枚（6.1連）</td>
+                </tr>
+                <tr>
+                  <td class="left">【2店舗・全559台合算】</td>
+                  <td><strong>38.8%</strong></td>
+                  <td><strong>26.7%</strong></td>
+                  <td><strong>40.3%</strong></td>
+                  <td><strong>56.2%</strong></td>
+                  <td><strong>1,144 枚</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="sub-heading">③ 朝1回目が「70G以内単発」だった台の、2回目打ち始めG数別・実測機械割</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>2回目打ち始めG数</th>
+                  <th>沖ドキ！ゴージャス<br>（機械割 / 1台期待値）</th>
+                  <th>沖ドキ！ＢＬＡＣＫ<br>（機械割 / 1台期待値）</th>
+                  <th>現場への立ち回り指示（結論）</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>200G〜</strong></td>
+                  <td class="cell-win">107.5%（+2,340円）🔥</td>
+                  <td class="cell-loss">96.9%（-875円）💀</td>
+                  <td class="left">ゴージャスは200Gから即確保OK。BLACKは打たない</td>
+                </tr>
+                <tr>
+                  <td><strong>250G〜</strong></td>
+                  <td class="cell-win">108.1%（+2,496円）🔥</td>
+                  <td class="cell-warn">100.7%（+185円）⚠️</td>
+                  <td class="left">ゴージャスは鉄板。BLACKはまだ浅いのでスルー</td>
+                </tr>
+                <tr>
+                  <td><strong>300G〜</strong></td>
+                  <td class="cell-win">111.0%（+3,541円）🔥</td>
+                  <td class="cell-win">101.9%（+471円）<br>※A店単体は <strong>107.5%</strong> 🎯</td>
+                  <td class="left">BLACKはA店なら300G〜で狙い目、B店はさらに深めのみ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const PASS_HASH = 'a1015d59b0457713';
+    const SESSION_KEY = 'personal_hub_unlocked_v1';
+
+    function computePinHash(str) {
+      const hw = str.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).trim();
+      let h1 = 2166136261 >>> 0;
+      let h2 = 16777619 >>> 0;
+      for (let i = 0; i < hw.length; i++) {
+        const c = hw.charCodeAt(i);
+        h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+        h2 = Math.imul(h2 ^ (c + 31), 2166136261) >>> 0;
+      }
+      return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+    }
+
+    function applyUnlockState(unlocked) {
+      document.getElementById('lock-overlay').classList.toggle('hidden', unlocked);
+      document.getElementById('app-content').classList.toggle('unlocked', unlocked);
+    }
+
+    function handleUnlock(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('lock-input');
+      if (computePinHash(input.value) === PASS_HASH) {
+        try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (_) {}
+        applyUnlockState(true);
+      } else {
+        document.getElementById('lock-error').textContent = 'パスコードが違います';
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    (function initLock() {
+      let isUnlocked = false;
+      try { isUnlocked = sessionStorage.getItem(SESSION_KEY) === '1'; } catch (_) {}
+      applyUnlockState(isUnlocked);
+      const input = document.getElementById('lock-input');
+      if (input) {
+        input.addEventListener('input', () => {
+          document.getElementById('lock-error').textContent = '';
+          if (computePinHash(input.value) === PASS_HASH) {
+            try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (_) {}
+            applyUnlockState(true);
+          }
+        });
+      }
+    })();
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    function switchTab(targetId) {
+      tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === targetId));
+      tabPanels.forEach(p => p.classList.toggle('active', p.id === targetId));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    tabBtns.forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+  </script>
+</body>
+</html>
