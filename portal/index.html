@@ -251,10 +251,133 @@
       font-weight: 700;
       color: var(--sub);
       line-height: 1.25;
-      max-width: 72px;
+      max-width: 76px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .shortcut-item-wrap {
+      flex: 0 0 76px;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      gap: 4px;
+    }
+    .shortcut-item-wrap.dragging {
+      opacity: 0.45;
+    }
+    .shortcut-item-wrap.drag-over .shortcut-circle {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35);
+    }
+    .shortcut-add-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+    .shortcut-add-btn .shortcut-circle {
+      border-style: dashed;
+      color: var(--blue);
+      font-size: 1.4rem;
+    }
+    .shortcut-mini-controls {
+      display: none;
+      gap: 2px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .shortcuts-box.edit-mode .shortcut-mini-controls {
+      display: flex;
+    }
+    .sc-ctrl-btn {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--border);
+      color: var(--sub);
+      border-radius: 5px;
+      padding: 1px 4px;
+      font-size: 0.66rem;
+      line-height: 1.2;
+      cursor: pointer;
+    }
+    .sc-ctrl-btn:hover {
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .sc-ctrl-btn.del:hover {
+      border-color: var(--red);
+      color: #fda4af;
+    }
+    .shortcut-manager {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(46, 63, 92, 0.6);
+    }
+    .shortcut-manager.active {
+      display: block;
+    }
+    .sc-form-grid {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .sc-emoji-chips {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .sc-emoji-chip {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 3px 7px;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+    .sc-emoji-chip:hover {
+      border-color: var(--blue);
+      background: var(--surface-hover);
+    }
+    .sc-manage-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .sc-manage-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(11, 17, 32, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      padding: 7px 10px;
+      border-radius: 9px;
+      font-size: 0.84rem;
+    }
+    .sc-manage-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+    .sc-manage-url {
+      font-size: 0.72rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 240px;
     }
 
     /* =====================================================
@@ -710,58 +833,61 @@
     <main class="container">
 
       <!-- =====================================================
-           1. よく使うサイト（Chromeショートカット風・左右スクロール）
+           1. よく使うサイト（Chromeショートカット風・追加／編集／削除／並び替え対応）
            ===================================================== -->
-      <section class="shortcuts-box">
+      <section class="shortcuts-box" id="shortcuts-box">
         <div class="shortcuts-header">
-          <span>🌐 よく使うサイト</span>
-          <span style="font-size:0.74rem; font-weight:500;">← 左右にスクロール →</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span>🌐 よく使うサイト</span>
+            <span style="font-size:0.72rem; font-weight:500; color:var(--muted);">（ドラッグ＆ドロップでも並び替え可）</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button type="button" class="mini-btn" onclick="openShortcutForm()">＋ 追加</button>
+            <button type="button" class="mini-btn" id="sc-edit-mode-btn" onclick="toggleShortcutManager()">⚙️ 編集・並び替え</button>
+          </div>
         </div>
-        <div class="shortcuts-strip">
-          <a class="shortcut-item" href="gundan-proposal.html">
-            <div class="shortcut-circle" style="border-color:var(--blue);">🎰</div>
-            <span class="shortcut-label">軍団プレゼン</span>
-          </a>
-          <a class="shortcut-item" href="https://useful-studio57.com/" target="_blank" rel="noopener">
-            <div class="shortcut-circle">🏢</div>
-            <span class="shortcut-label">Useful公式</span>
-          </a>
-          <a class="shortcut-item" href="https://kiocraft-web.web.app/" target="_blank" rel="noopener">
-            <div class="shortcut-circle">📱</div>
-            <span class="shortcut-label">キオクラフト</span>
-          </a>
-          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/castle-atsuta.htm" target="_blank" rel="noopener">
-            <div class="shortcut-circle">🏯</div>
-            <span class="shortcut-label">熱田キャッスル</span>
-          </a>
-          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/kingwakamiya.htm" target="_blank" rel="noopener">
-            <div class="shortcut-circle">👑</div>
-            <span class="shortcut-label">若宮キング</span>
-          </a>
-          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/maruhan-kamiotai.htm" target="_blank" rel="noopener">
-            <div class="shortcut-circle">🔴</div>
-            <span class="shortcut-label">上小田井マル</span>
-          </a>
-          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/kingkanayama.htm" target="_blank" rel="noopener">
-            <div class="shortcut-circle">🦁</div>
-            <span class="shortcut-label">金山キング</span>
-          </a>
-          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/king-yanagibashi.htm" target="_blank" rel="noopener">
-            <div class="shortcut-circle">🌉</div>
-            <span class="shortcut-label">柳橋キング</span>
-          </a>
-          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/castle-oozone.htm" target="_blank" rel="noopener">
-            <div class="shortcut-circle">🏰</div>
-            <span class="shortcut-label">大曽根キャス</span>
-          </a>
-          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/kingsakae.htm" target="_blank" rel="noopener">
-            <div class="shortcut-circle">✨</div>
-            <span class="shortcut-label">住吉キング</span>
-          </a>
-          <a class="shortcut-item" href="https://www.p-world.co.jp/aichi/kingkankou-sinsakae.htm" target="_blank" rel="noopener">
-            <div class="shortcut-circle">⚡</div>
-            <span class="shortcut-label">東新町キング</span>
-          </a>
+
+        <div class="shortcuts-strip" id="shortcuts-strip"></div>
+
+        <!-- サイト追加・編集・並び替えパネル -->
+        <div class="shortcut-manager" id="shortcut-manager">
+          <div class="memo-editor-box" style="margin-bottom:8px;">
+            <div style="font-size:0.8rem; font-weight:800; color:var(--sub); margin-bottom:8px;" id="sc-form-heading">＋ 新しいサイトを追加</div>
+            <div class="sc-emoji-chips" aria-label="アイコン候補">
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('🌐')">🌐</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('🎰')">🎰</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('🏯')">🏯</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('👑')">👑</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('🔴')">🔴</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('🦁')">🦁</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('🌉')">🌉</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('🏰')">🏰</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('✨')">✨</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('⚡')">⚡</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('📊')">📊</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('📱')">📱</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('🏢')">🏢</button>
+              <button type="button" class="sc-emoji-chip" onclick="pickShortcutEmoji('💰')">💰</button>
+            </div>
+            <div class="sc-form-grid">
+              <input type="text" id="sc-icon-input" class="memo-title-input" style="margin-bottom:0; text-align:center;" placeholder="🌐" maxlength="4" value="🌐">
+              <input type="text" id="sc-label-input" class="memo-title-input" style="margin-bottom:0;" placeholder="サイト名（例：北ゼン / データサイト）">
+            </div>
+            <input type="text" id="sc-url-input" class="memo-title-input" placeholder="URL（例：https://... または gundan-proposal.html）">
+            <div class="memo-editor-actions">
+              <span style="font-size:0.74rem; color:var(--muted);" id="sc-status">◀ ▶ / ▲ ▼ ボタンやドラッグで順番を自由に並び替えられます</span>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="mini-btn" id="sc-cancel-btn" style="display:none;" onclick="cancelEditShortcut()">入力クリア</button>
+                <button type="button" class="add-btn" id="sc-save-btn" onclick="saveShortcut()">＋ サイトを追加</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 2px 4px;">
+            <span style="font-size:0.78rem; font-weight:800; color:var(--sub);">登録サイト一覧（並び替え・編集・削除）</span>
+            <button type="button" class="mini-btn" onclick="closeShortcutManager()">✓ 完了して閉じる</button>
+          </div>
+          <div class="sc-manage-list" id="sc-manage-list"></div>
         </div>
       </section>
 
@@ -1152,7 +1278,380 @@
     }
 
     // =====================================================
-    // 3. Editable Routines & Tasks
+    // 2-B. Editable & Reorderable Shortcuts (よく使うサイト)
+    // =====================================================
+    const STORAGE_SHORTCUTS = 'personal_hub_shortcuts_v1';
+    const DEFAULT_SHORTCUTS = [
+      { id: 'sc1', icon: '🎰', label: '軍団プレゼン', url: 'gundan-proposal.html', featured: true },
+      { id: 'sc2', icon: '🏢', label: 'Useful公式', url: 'https://useful-studio57.com/' },
+      { id: 'sc3', icon: '📱', label: 'キオクラフト', url: 'https://kiocraft-web.web.app/' },
+      { id: 'sc4', icon: '🏯', label: '熱田キャッスル', url: 'https://www.p-world.co.jp/aichi/castle-atsuta.htm' },
+      { id: 'sc5', icon: '👑', label: '若宮キング', url: 'https://www.p-world.co.jp/aichi/kingwakamiya.htm' },
+      { id: 'sc6', icon: '🔴', label: '上小田井マル', url: 'https://www.p-world.co.jp/aichi/maruhan-kamiotai.htm' },
+      { id: 'sc7', icon: '🦁', label: '金山キング', url: 'https://www.p-world.co.jp/aichi/kingkanayama.htm' },
+      { id: 'sc8', icon: '🌉', label: '柳橋キング', url: 'https://www.p-world.co.jp/aichi/king-yanagibashi.htm' },
+      { id: 'sc9', icon: '🏰', label: '大曽根キャス', url: 'https://www.p-world.co.jp/aichi/castle-oozone.htm' },
+      { id: 'sc10', icon: '✨', label: '住吉キング', url: 'https://www.p-world.co.jp/aichi/kingsakae.htm' },
+      { id: 'sc11', icon: '⚡', label: '東新町キング', url: 'https://www.p-world.co.jp/aichi/kingkankou-sinsakae.htm' }
+    ];
+
+    let editingShortcutId = null;
+    let dragShortcutIdx = null;
+
+    function loadShortcuts() {
+      try {
+        const raw = localStorage.getItem(STORAGE_SHORTCUTS);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (_) {}
+      return JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
+    }
+
+    function saveShortcutsArray(list) {
+      try { localStorage.setItem(STORAGE_SHORTCUTS, JSON.stringify(list)); } catch (_) {}
+      renderShortcuts();
+      pushToCloud();
+    }
+
+    function normalizeShortcutUrl(rawUrl) {
+      const u = (rawUrl || '').trim();
+      if (!u) return '';
+      if (/^(https?:\/\/|mailto:|tel:|\/|\.\.?\/|#)/i.test(u) || /\.html(\?|#|$)/i.test(u)) {
+        return u;
+      }
+      return 'https://' + u;
+    }
+
+    function pickShortcutEmoji(emoji) {
+      const el = document.getElementById('sc-icon-input');
+      if (el) el.value = emoji;
+    }
+
+    function openShortcutForm() {
+      const box = document.getElementById('shortcuts-box');
+      const mgr = document.getElementById('shortcut-manager');
+      const btn = document.getElementById('sc-edit-mode-btn');
+      box.classList.add('edit-mode');
+      mgr.classList.add('active');
+      if (btn) btn.textContent = '✓ 編集を閉じる';
+      cancelEditShortcut();
+      document.getElementById('sc-label-input').focus();
+    }
+
+    function toggleShortcutManager() {
+      const box = document.getElementById('shortcuts-box');
+      const mgr = document.getElementById('shortcut-manager');
+      const btn = document.getElementById('sc-edit-mode-btn');
+      const isOpen = mgr.classList.toggle('active');
+      box.classList.toggle('edit-mode', isOpen);
+      if (btn) btn.textContent = isOpen ? '✓ 編集を閉じる' : '⚙️ 編集・並び替え';
+    }
+
+    function closeShortcutManager() {
+      const box = document.getElementById('shortcuts-box');
+      const mgr = document.getElementById('shortcut-manager');
+      const btn = document.getElementById('sc-edit-mode-btn');
+      mgr.classList.remove('active');
+      box.classList.remove('edit-mode');
+      if (btn) btn.textContent = '⚙️ 編集・並び替え';
+      cancelEditShortcut();
+    }
+
+    function saveShortcut() {
+      const iconEl = document.getElementById('sc-icon-input');
+      const labelEl = document.getElementById('sc-label-input');
+      const urlEl = document.getElementById('sc-url-input');
+      const statusEl = document.getElementById('sc-status');
+
+      const icon = (iconEl.value || '').trim() || '🌐';
+      const label = (labelEl.value || '').trim();
+      const url = normalizeShortcutUrl(urlEl.value);
+
+      if (!label || !url) {
+        statusEl.textContent = '⚠️ サイト名とURLを入力してください';
+        statusEl.style.color = '#fda4af';
+        return;
+      }
+
+      const list = loadShortcuts();
+      if (editingShortcutId) {
+        const idx = list.findIndex(item => item.id === editingShortcutId);
+        if (idx !== -1) {
+          list[idx].icon = icon;
+          list[idx].label = label;
+          list[idx].url = url;
+        }
+        cancelEditShortcut();
+        statusEl.textContent = '✓ サイト情報を更新しました';
+      } else {
+        list.push({
+          id: 'sc_' + Date.now().toString(36),
+          icon,
+          label,
+          url
+        });
+        iconEl.value = '🌐';
+        labelEl.value = '';
+        urlEl.value = '';
+        statusEl.textContent = '✓ サイトを追加しました';
+      }
+      statusEl.style.color = 'var(--green)';
+      saveShortcutsArray(list);
+    }
+
+    function startEditShortcut(id) {
+      const list = loadShortcuts();
+      const target = list.find(item => item.id === id);
+      if (!target) return;
+      const box = document.getElementById('shortcuts-box');
+      const mgr = document.getElementById('shortcut-manager');
+      const btn = document.getElementById('sc-edit-mode-btn');
+      box.classList.add('edit-mode');
+      mgr.classList.add('active');
+      if (btn) btn.textContent = '✓ 編集を閉じる';
+
+      editingShortcutId = id;
+      document.getElementById('sc-form-heading').textContent = `✏️ 「${target.label}」を編集中`;
+      document.getElementById('sc-icon-input').value = target.icon || '🌐';
+      document.getElementById('sc-label-input').value = target.label || '';
+      document.getElementById('sc-url-input').value = target.url || '';
+      document.getElementById('sc-save-btn').textContent = '💾 更新して保存';
+      document.getElementById('sc-cancel-btn').style.display = '';
+      document.getElementById('sc-label-input').focus();
+    }
+
+    function cancelEditShortcut() {
+      editingShortcutId = null;
+      document.getElementById('sc-form-heading').textContent = '＋ 新しいサイトを追加';
+      document.getElementById('sc-icon-input').value = '🌐';
+      document.getElementById('sc-label-input').value = '';
+      document.getElementById('sc-url-input').value = '';
+      document.getElementById('sc-save-btn').textContent = '＋ サイトを追加';
+      document.getElementById('sc-cancel-btn').style.display = 'none';
+    }
+
+    function deleteShortcut(id) {
+      const list = loadShortcuts().filter(item => item.id !== id);
+      if (editingShortcutId === id) cancelEditShortcut();
+      saveShortcutsArray(list);
+    }
+
+    function moveShortcut(idx, delta) {
+      const list = loadShortcuts();
+      const targetIdx = idx + delta;
+      if (targetIdx < 0 || targetIdx >= list.length) return;
+      const [moved] = list.splice(idx, 1);
+      list.splice(targetIdx, 0, moved);
+      saveShortcutsArray(list);
+    }
+
+    function reorderShortcutByDrag(fromIdx, toIdx) {
+      if (fromIdx === null || toIdx === null || fromIdx === toIdx) return;
+      const list = loadShortcuts();
+      if (fromIdx < 0 || fromIdx >= list.length || toIdx < 0 || toIdx >= list.length) return;
+      const [moved] = list.splice(fromIdx, 1);
+      list.splice(toIdx, 0, moved);
+      saveShortcutsArray(list);
+    }
+
+    function renderShortcuts() {
+      const list = loadShortcuts();
+      const strip = document.getElementById('shortcuts-strip');
+      const manageList = document.getElementById('sc-manage-list');
+      if (!strip) return;
+      strip.innerHTML = '';
+      if (manageList) manageList.innerHTML = '';
+
+      list.forEach((item, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'shortcut-item-wrap';
+        wrap.draggable = true;
+        wrap.dataset.index = String(idx);
+
+        wrap.addEventListener('dragstart', (e) => {
+          dragShortcutIdx = idx;
+          wrap.classList.add('dragging');
+          if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(idx));
+          }
+        });
+        wrap.addEventListener('dragend', () => {
+          dragShortcutIdx = null;
+          wrap.classList.remove('dragging');
+          strip.querySelectorAll('.shortcut-item-wrap').forEach(el => el.classList.remove('drag-over'));
+        });
+        wrap.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (dragShortcutIdx !== null && dragShortcutIdx !== idx) {
+            wrap.classList.add('drag-over');
+          }
+        });
+        wrap.addEventListener('dragleave', () => {
+          wrap.classList.remove('drag-over');
+        });
+        wrap.addEventListener('drop', (e) => {
+          e.preventDefault();
+          wrap.classList.remove('drag-over');
+          const from = dragShortcutIdx !== null ? dragShortcutIdx : Number(e.dataTransfer.getData('text/plain'));
+          reorderShortcutByDrag(from, idx);
+        });
+
+        const a = document.createElement('a');
+        a.className = 'shortcut-item';
+        a.href = item.url || '#';
+        if (/^https?:\/\//i.test(item.url || '')) {
+          a.target = '_blank';
+          a.rel = 'noopener';
+        }
+
+        const circle = document.createElement('div');
+        circle.className = 'shortcut-circle';
+        if (item.featured) circle.style.borderColor = 'var(--blue)';
+        circle.textContent = item.icon || '🌐';
+
+        const label = document.createElement('span');
+        label.className = 'shortcut-label';
+        label.textContent = item.label || 'サイト';
+        label.title = item.label || '';
+
+        a.appendChild(circle);
+        a.appendChild(label);
+
+        const ctrls = document.createElement('div');
+        ctrls.className = 'shortcut-mini-controls';
+
+        const leftBtn = document.createElement('button');
+        leftBtn.type = 'button';
+        leftBtn.className = 'sc-ctrl-btn';
+        leftBtn.textContent = '◀';
+        leftBtn.title = '左へ移動';
+        leftBtn.disabled = idx === 0;
+        leftBtn.addEventListener('click', () => moveShortcut(idx, -1));
+
+        const rightBtn = document.createElement('button');
+        rightBtn.type = 'button';
+        rightBtn.className = 'sc-ctrl-btn';
+        rightBtn.textContent = '▶';
+        rightBtn.title = '右へ移動';
+        rightBtn.disabled = idx === list.length - 1;
+        rightBtn.addEventListener('click', () => moveShortcut(idx, 1));
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'sc-ctrl-btn';
+        editBtn.textContent = '✏️';
+        editBtn.title = '編集';
+        editBtn.addEventListener('click', () => startEditShortcut(item.id));
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'sc-ctrl-btn del';
+        delBtn.textContent = '🗑️';
+        delBtn.title = '削除';
+        delBtn.addEventListener('click', () => deleteShortcut(item.id));
+
+        ctrls.appendChild(leftBtn);
+        ctrls.appendChild(rightBtn);
+        ctrls.appendChild(editBtn);
+        ctrls.appendChild(delBtn);
+
+        wrap.appendChild(a);
+        wrap.appendChild(ctrls);
+        strip.appendChild(wrap);
+
+        // 管理リスト行の描画
+        if (manageList) {
+          const row = document.createElement('div');
+          row.className = 'sc-manage-row';
+
+          const info = document.createElement('div');
+          info.className = 'sc-manage-info';
+          const icSpan = document.createElement('span');
+          icSpan.style.fontSize = '1.15rem';
+          icSpan.textContent = item.icon || '🌐';
+          const textWrap = document.createElement('div');
+          textWrap.style.minWidth = '0';
+          const nameDiv = document.createElement('div');
+          nameDiv.style.fontWeight = '800';
+          nameDiv.textContent = item.label;
+          const urlDiv = document.createElement('div');
+          urlDiv.className = 'sc-manage-url';
+          urlDiv.textContent = item.url;
+          textWrap.appendChild(nameDiv);
+          textWrap.appendChild(urlDiv);
+          info.appendChild(icSpan);
+          info.appendChild(textWrap);
+
+          const actions = document.createElement('div');
+          actions.className = 'task-actions';
+
+          const upBtn = document.createElement('button');
+          upBtn.type = 'button';
+          upBtn.className = 'icon-btn';
+          upBtn.textContent = '▲';
+          upBtn.title = '前（左）へ移動';
+          upBtn.disabled = idx === 0;
+          upBtn.addEventListener('click', () => moveShortcut(idx, -1));
+
+          const downBtn = document.createElement('button');
+          downBtn.type = 'button';
+          downBtn.className = 'icon-btn';
+          downBtn.textContent = '▼';
+          downBtn.title = '次（右）へ移動';
+          downBtn.disabled = idx === list.length - 1;
+          downBtn.addEventListener('click', () => moveShortcut(idx, 1));
+
+          const mEditBtn = document.createElement('button');
+          mEditBtn.type = 'button';
+          mEditBtn.className = 'icon-btn';
+          mEditBtn.textContent = '✏️';
+          mEditBtn.title = '編集';
+          mEditBtn.addEventListener('click', () => startEditShortcut(item.id));
+
+          const mDelBtn = document.createElement('button');
+          mDelBtn.type = 'button';
+          mDelBtn.className = 'icon-btn del';
+          mDelBtn.textContent = '🗑️';
+          mDelBtn.title = '削除';
+          mDelBtn.addEventListener('click', () => deleteShortcut(item.id));
+
+          actions.appendChild(upBtn);
+          actions.appendChild(downBtn);
+          actions.appendChild(mEditBtn);
+          actions.appendChild(mDelBtn);
+
+          row.appendChild(info);
+          row.appendChild(actions);
+          manageList.appendChild(row);
+        }
+      });
+
+      // 末尾に「＋追加」ショートカットボタンを配置
+      const addWrap = document.createElement('div');
+      addWrap.className = 'shortcut-item-wrap';
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'shortcut-item shortcut-add-btn';
+      addBtn.addEventListener('click', openShortcutForm);
+      const addCircle = document.createElement('div');
+      addCircle.className = 'shortcut-circle';
+      addCircle.textContent = '＋';
+      const addLabel = document.createElement('span');
+      addLabel.className = 'shortcut-label';
+      addLabel.textContent = 'サイト追加';
+      addBtn.appendChild(addCircle);
+      addBtn.appendChild(addLabel);
+      addWrap.appendChild(addBtn);
+      strip.appendChild(addWrap);
+    }
+
+    renderShortcuts();
+
+    // =====================================================
+    // 3. Editable & Reorderable Routines & Tasks
     // =====================================================
     const STORAGE_ROUTINES = 'personal_hub_routines_v2';
     const STORAGE_TASKS = 'personal_hub_tasks_v2';
@@ -1223,6 +1722,30 @@
         const actions = document.createElement('div');
         actions.className = 'task-actions';
 
+        const upBtn = document.createElement('button');
+        upBtn.className = 'icon-btn';
+        upBtn.textContent = '▲';
+        upBtn.title = '上へ移動';
+        upBtn.disabled = idx === 0;
+        upBtn.addEventListener('click', () => {
+          if (idx <= 0) return;
+          const [moved] = list.splice(idx, 1);
+          list.splice(idx - 1, 0, moved);
+          saveList(type, list);
+        });
+
+        const downBtn = document.createElement('button');
+        downBtn.className = 'icon-btn';
+        downBtn.textContent = '▼';
+        downBtn.title = '下へ移動';
+        downBtn.disabled = idx === list.length - 1;
+        downBtn.addEventListener('click', () => {
+          if (idx >= list.length - 1) return;
+          const [moved] = list.splice(idx, 1);
+          list.splice(idx + 1, 0, moved);
+          saveList(type, list);
+        });
+
         const editBtn = document.createElement('button');
         editBtn.className = 'icon-btn';
         editBtn.textContent = '✏️';
@@ -1244,6 +1767,8 @@
           saveList(type, list);
         });
 
+        actions.appendChild(upBtn);
+        actions.appendChild(downBtn);
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
 
@@ -1371,7 +1896,7 @@
       badge.textContent = `${list.length} 件`;
       container.innerHTML = '';
 
-      list.forEach(item => {
+      list.forEach((item, idx) => {
         const card = document.createElement('div');
         card.className = 'memo-card';
 
@@ -1395,6 +1920,30 @@
           setTimeout(() => { copyBtn.textContent = '📋 コピー'; }, 1200);
         });
 
+        const upBtn = document.createElement('button');
+        upBtn.className = 'icon-btn';
+        upBtn.textContent = '▲';
+        upBtn.title = '上へ移動';
+        upBtn.disabled = idx === 0;
+        upBtn.addEventListener('click', () => {
+          if (idx <= 0) return;
+          const [moved] = list.splice(idx, 1);
+          list.splice(idx - 1, 0, moved);
+          saveCopyPasteArray(list);
+        });
+
+        const downBtn = document.createElement('button');
+        downBtn.className = 'icon-btn';
+        downBtn.textContent = '▼';
+        downBtn.title = '下へ移動';
+        downBtn.disabled = idx === list.length - 1;
+        downBtn.addEventListener('click', () => {
+          if (idx >= list.length - 1) return;
+          const [moved] = list.splice(idx, 1);
+          list.splice(idx + 1, 0, moved);
+          saveCopyPasteArray(list);
+        });
+
         const editBtn = document.createElement('button');
         editBtn.className = 'icon-btn';
         editBtn.textContent = '✏️';
@@ -1408,6 +1957,8 @@
         delBtn.addEventListener('click', () => deleteCopyPaste(item.id));
 
         actions.appendChild(copyBtn);
+        actions.appendChild(upBtn);
+        actions.appendChild(downBtn);
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
 
@@ -1598,10 +2149,12 @@
         });
         if (!res.ok) throw new Error('status ' + res.status);
         const data = await res.json();
+        if (Array.isArray(data.shortcuts)) localStorage.setItem(STORAGE_SHORTCUTS, JSON.stringify(data.shortcuts));
         if (Array.isArray(data.routines)) localStorage.setItem(STORAGE_ROUTINES, JSON.stringify(data.routines));
         if (Array.isArray(data.tasks)) localStorage.setItem(STORAGE_TASKS, JSON.stringify(data.tasks));
         if (Array.isArray(data.copypaste)) localStorage.setItem(STORAGE_COPYPASTE, JSON.stringify(data.copypaste));
         if (Array.isArray(data.memos)) localStorage.setItem(STORAGE_MEMOS, JSON.stringify(data.memos));
+        renderShortcuts();
         renderList('routine');
         renderList('task');
         renderCopyPaste();
@@ -1619,6 +2172,7 @@
         setSyncStatus('🔄 クラウド保存中...', 'var(--amber)');
         const payload = {
           updatedAt: nowStr(),
+          shortcuts: loadShortcuts(),
           routines: loadList('routine'),
           tasks: loadList('task'),
           copypaste: loadCopyPaste(),
@@ -1656,6 +2210,7 @@
     // 5. Export Markdown for AI Agent (Antigravity / SaberBot)
     // =====================================================
     async function exportAllDataForAI() {
+      const shortcuts = loadShortcuts();
       const routines = loadList('routine');
       const tasks = loadList('task');
       const copypastes = loadCopyPaste();
@@ -1665,6 +2220,9 @@
         '# Personal Hub 保存データ（AIエージェント参照用）',
         '',
         `更新日時: ${nowStr()}`,
+        '',
+        '## 0. よく使うサイト',
+        ...shortcuts.map(s => `- ${s.icon || '🌐'} [${s.label}](${s.url})`),
         '',
         '## 1. ルーティン',
         ...routines.map(r => `- [${r.done ? 'x' : ' '}] ${r.text}`),
