@@ -2205,6 +2205,17 @@
         } catch (_) {}
       }
     });
+    // 画面を開きっぱなしでも15秒ごとにクラウドから自動反映（入力中・編集中は邪魔しないようスキップ）
+    setInterval(() => {
+      try {
+        if (document.visibilityState !== 'visible') return;
+        if (sessionStorage.getItem(SESSION_KEY) !== '1') return;
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+        if (editingShortcutId || editingCpId || editingMemoId) return;
+        pullFromCloud(false);
+      } catch (_) {}
+    }, 15000);
 
     // =====================================================
     // 5. Export Markdown for AI Agent (Antigravity / SaberBot)
