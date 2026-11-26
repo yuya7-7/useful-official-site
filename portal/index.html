@@ -2149,7 +2149,12 @@
         });
         if (!res.ok) throw new Error('status ' + res.status);
         const data = await res.json();
-        if (Array.isArray(data.shortcuts)) localStorage.setItem(STORAGE_SHORTCUTS, JSON.stringify(data.shortcuts));
+        if (Array.isArray(data.shortcuts)) {
+          localStorage.setItem(STORAGE_SHORTCUTS, JSON.stringify(data.shortcuts));
+        } else if (localStorage.getItem(STORAGE_SHORTCUTS)) {
+          // クラウド側にまだ shortcuts が無く、この端末（スマホ等）に編集済みデータがある場合は自動アップロード
+          setTimeout(() => pushToCloud(), 300);
+        }
         if (Array.isArray(data.routines)) localStorage.setItem(STORAGE_ROUTINES, JSON.stringify(data.routines));
         if (Array.isArray(data.tasks)) localStorage.setItem(STORAGE_TASKS, JSON.stringify(data.tasks));
         if (Array.isArray(data.copypaste)) localStorage.setItem(STORAGE_COPYPASTE, JSON.stringify(data.copypaste));
