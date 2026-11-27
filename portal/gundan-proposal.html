@@ -355,7 +355,7 @@
       <div class="lock-title">資料ロック中</div>
       <p class="lock-desc">閲覧するにはパスコードを入力してください</p>
       <form id="lock-form" onsubmit="handleUnlock(event)">
-        <input type="password" id="lock-input" class="lock-input" inputmode="numeric" placeholder="••••" autocomplete="off" autofocus>
+        <input type="password" id="lock-input" class="lock-input" inputmode="numeric" placeholder="•••" autocomplete="off" autofocus>
         <div class="lock-error" id="lock-error"></div>
         <button type="submit" class="lock-btn">ロック解除</button>
       </form>
@@ -1088,8 +1088,20 @@
   </div>
 
   <script>
-    const PASS_HASH = 'a1015d59b0457713';
-    const SESSION_KEY = 'personal_hub_unlocked_v1';
+    const PASS_HASH = '8bbb3eec2bb21e51'; // 777 (Presentation Passcode)
+    const SESSION_KEY = 'personal_hub_presen_unlocked_v2';
+    const HUB_SESSION_KEY = 'personal_hub_unlocked_v2';
+    const MODE_SESSION_KEY = 'personal_hub_mode_v2';
+
+    function markPresenSession() {
+      try {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        sessionStorage.setItem(HUB_SESSION_KEY, '1');
+        if (sessionStorage.getItem(MODE_SESSION_KEY) !== 'owner') {
+          sessionStorage.setItem(MODE_SESSION_KEY, 'presen');
+        }
+      } catch (_) {}
+    }
 
     function computePinHash(str) {
       const hw = str.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).trim();
@@ -1112,7 +1124,7 @@
       if (e) e.preventDefault();
       const input = document.getElementById('lock-input');
       if (computePinHash(input.value) === PASS_HASH) {
-        try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (_) {}
+        markPresenSession();
         applyUnlockState(true);
       } else {
         document.getElementById('lock-error').textContent = 'パスコードが違います';
@@ -1130,7 +1142,7 @@
         input.addEventListener('input', () => {
           document.getElementById('lock-error').textContent = '';
           if (computePinHash(input.value) === PASS_HASH) {
-            try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (_) {}
+            markPresenSession();
             applyUnlockState(true);
           }
         });

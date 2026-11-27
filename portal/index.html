@@ -793,11 +793,21 @@
       display: none;
     }
     .file-card.expanded .note-detail { display: block; }
+    /* Guest Presentation-Only Mode (when unlocked with 777) */
+    body.presen-only-mode #shortcuts-box,
+    body.presen-only-mode .routine-card,
+    body.presen-only-mode #acc-tasks,
+    body.presen-only-mode #acc-copypaste,
+    body.presen-only-mode #cloud-sync-badge,
+    body.presen-only-mode #cloud-sync-pull-btn,
+    body.presen-only-mode #presen-back-folder-btn {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Passcode Lock Screen -->
+  <!-- Passcode Lock Screen (Main: 1515 / Presentation Only: 777) -->
   <div class="lock-overlay" id="lock-overlay">
     <div class="lock-card">
       <div class="lock-icon">🔒</div>
@@ -807,6 +817,23 @@
         <input type="password" id="lock-input" class="lock-input" inputmode="numeric" placeholder="••••" autocomplete="off" autofocus>
         <div class="lock-error" id="lock-error"></div>
         <button type="submit" class="lock-btn">ロック解除</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Presentation Folder Passcode Modal (777) -->
+  <div class="lock-overlay hidden" id="presen-lock-overlay" style="background: rgba(11, 17, 32, 0.85); backdrop-filter: blur(6px);">
+    <div class="lock-card">
+      <div class="lock-icon">📂</div>
+      <div class="lock-title">プレゼン資料 ロック中</div>
+      <p class="lock-desc">プレゼン資料を閲覧するには専用パスコードを入力してください</p>
+      <form id="presen-lock-form" onsubmit="handlePresenUnlock(event)">
+        <input type="password" id="presen-lock-input" class="lock-input" inputmode="numeric" placeholder="•••" autocomplete="off">
+        <div class="lock-error" id="presen-lock-error"></div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="mini-btn" style="flex:1; padding:12px;" onclick="closePresenLockModal()">キャンセル</button>
+          <button type="submit" class="lock-btn" style="flex:1;">解除して開く</button>
+        </div>
       </form>
     </div>
   </div>
@@ -822,7 +849,7 @@
           <span id="cloud-sync-badge" style="font-size:0.75rem; font-weight:700; color:var(--green); background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35); padding:4px 10px; border-radius:999px;">
             ☁️ 自動同期ON
           </span>
-          <button class="lock-top-btn" onclick="pullFromCloud(true)" title="クラウドから最新データを再取得します">
+          <button class="lock-top-btn" id="cloud-sync-pull-btn" onclick="pullFromCloud(true)" title="クラウドから最新データを再取得します">
             🔄 最新同期
           </button>
           <button class="lock-top-btn" onclick="lockPage()">🔒 ロック</button>
@@ -1028,8 +1055,8 @@
                 <div class="folder-left">
                   <span class="folder-emoji">📂</span>
                   <div>
-                    <span style="color:var(--blue);">プレゼン資料</span>
-                    <span class="folder-sub">プレゼン資料・統計レポート一覧</span>
+                    <span style="color:var(--blue);">プレゼン資料 🔒</span>
+                    <span class="folder-sub">プレゼン資料・統計レポート一覧（要パスコード）</span>
                   </div>
                 </div>
                 <span class="folder-arrow">→</span>
@@ -1134,7 +1161,7 @@
           <div class="folder-view" id="folder-presen">
             <div class="folder-breadcrumb">
               <span>🗂️ 資料＆データ &gt; 📂 プレゼン資料・統計レポート一覧</span>
-              <button class="mini-btn" onclick="openFolder('folder-root')">← フォルダ一覧へ戻る</button>
+              <button class="mini-btn" id="presen-back-folder-btn" onclick="openFolder('folder-root')">← フォルダ一覧へ戻る</button>
             </div>
             <div class="scroll-box tall">
               <a href="gundan-proposal.html" class="file-card featured">
@@ -1157,11 +1184,14 @@
 
   <script>
     // =====================================================
-    // 1. Passcode Lock (2525) & Real-Time Cloud Sync
+    // 1. Passcode Lock (Main: 1515 / Presentation Only: 777) & Real-Time Cloud Sync
     // =====================================================
-    const PASS_HASH = 'a1015d59b0457713';
-    const SESSION_KEY = 'personal_hub_unlocked_v1';
-    const PIN_STORAGE_KEY = 'personal_hub_pin_v1';
+    const PASS_HASH = '5ce1642198e4f383';        // 1515 (Owner Full Hub)
+    const PRESEN_PASS_HASH = '8bbb3eec2bb21e51'; // 777 (Presentation Only)
+    const SESSION_KEY = 'personal_hub_unlocked_v2';
+    const PRESEN_SESSION_KEY = 'personal_hub_presen_unlocked_v2';
+    const MODE_SESSION_KEY = 'personal_hub_mode_v2'; // 'owner' | 'presen'
+    const PIN_STORAGE_KEY = 'personal_hub_pin_v2';
     const CLOUD_SYNC_URL = 'https://n8n.srv1527372.hstgr.cloud/portal-sync';
 
     function normalizePin(str) {
@@ -1182,9 +1212,18 @@
 
     function getActivePin() {
       try {
+        if (sessionStorage.getItem(MODE_SESSION_KEY) === 'presen') return '';
         return sessionStorage.getItem(PIN_STORAGE_KEY) || localStorage.getItem(PIN_STORAGE_KEY) || '';
       } catch (_) {
         return '';
+      }
+    }
+
+    function isPresenUnlocked() {
+      try {
+        return sessionStorage.getItem(PRESEN_SESSION_KEY) === '1';
+      } catch (_) {
+        return false;
       }
     }
 
@@ -1195,11 +1234,21 @@
       el.style.color = color || 'var(--green)';
     }
 
-    function applyUnlockState(unlocked) {
+    function applyUnlockState(unlocked, mode) {
+      const activeMode = mode || 'owner';
       document.getElementById('lock-overlay').classList.toggle('hidden', unlocked);
       document.getElementById('app-content').classList.toggle('unlocked', unlocked);
+      document.body.classList.toggle('presen-only-mode', unlocked && activeMode === 'presen');
       if (unlocked) {
-        pullFromCloud(false);
+        if (activeMode === 'presen') {
+          const accFolders = document.getElementById('acc-folders');
+          if (accFolders) accFolders.classList.add('open');
+          document.querySelectorAll('#acc-folders .folder-view').forEach(v => {
+            v.classList.toggle('active', v.id === 'folder-presen');
+          });
+        } else {
+          pullFromCloud(false);
+        }
       } else {
         const input = document.getElementById('lock-input');
         if (input) {
@@ -1209,18 +1258,35 @@
       }
     }
 
+    function tryUnlockWithPin(pin) {
+      const h = computePinHash(pin);
+      if (h === PASS_HASH) {
+        try {
+          sessionStorage.setItem(SESSION_KEY, '1');
+          sessionStorage.setItem(MODE_SESSION_KEY, 'owner');
+          sessionStorage.setItem(PIN_STORAGE_KEY, pin);
+          localStorage.setItem(PIN_STORAGE_KEY, pin);
+        } catch (_) {}
+        applyUnlockState(true, 'owner');
+        return true;
+      }
+      if (h === PRESEN_PASS_HASH) {
+        try {
+          sessionStorage.setItem(SESSION_KEY, '1');
+          sessionStorage.setItem(PRESEN_SESSION_KEY, '1');
+          sessionStorage.setItem(MODE_SESSION_KEY, 'presen');
+        } catch (_) {}
+        applyUnlockState(true, 'presen');
+        return true;
+      }
+      return false;
+    }
+
     function handleUnlock(e) {
       if (e) e.preventDefault();
       const input = document.getElementById('lock-input');
       const pin = normalizePin(input.value);
-      if (computePinHash(pin) === PASS_HASH) {
-        try {
-          sessionStorage.setItem(SESSION_KEY, '1');
-          sessionStorage.setItem(PIN_STORAGE_KEY, pin);
-          localStorage.setItem(PIN_STORAGE_KEY, pin);
-        } catch (_) {}
-        applyUnlockState(true);
-      } else {
+      if (!tryUnlockWithPin(pin)) {
         document.getElementById('lock-error').textContent = 'パスコードが違います';
         input.value = '';
         input.focus();
@@ -1230,43 +1296,95 @@
     function lockPage() {
       try {
         sessionStorage.removeItem(SESSION_KEY);
+        sessionStorage.removeItem(PRESEN_SESSION_KEY);
+        sessionStorage.removeItem(MODE_SESSION_KEY);
       } catch (_) {}
-      applyUnlockState(false);
+      openFolderDirect('folder-root');
+      applyUnlockState(false, 'owner');
     }
 
     (function initLock() {
       let isUnlocked = false;
-      try { isUnlocked = sessionStorage.getItem(SESSION_KEY) === '1'; } catch (_) {}
-      applyUnlockState(isUnlocked);
+      let mode = 'owner';
+      try {
+        isUnlocked = sessionStorage.getItem(SESSION_KEY) === '1';
+        mode = sessionStorage.getItem(MODE_SESSION_KEY) || 'owner';
+      } catch (_) {}
+      applyUnlockState(isUnlocked, mode);
 
       const input = document.getElementById('lock-input');
       if (input) {
         input.addEventListener('input', () => {
           document.getElementById('lock-error').textContent = '';
           const pin = normalizePin(input.value);
-          if (computePinHash(pin) === PASS_HASH) {
-            try {
-              sessionStorage.setItem(SESSION_KEY, '1');
-              sessionStorage.setItem(PIN_STORAGE_KEY, pin);
-              localStorage.setItem(PIN_STORAGE_KEY, pin);
-            } catch (_) {}
-            applyUnlockState(true);
+          // 777 is 3 digits, 1515 is 4 digits
+          tryUnlockWithPin(pin);
+        });
+      }
+
+      const presenInput = document.getElementById('presen-lock-input');
+      if (presenInput) {
+        presenInput.addEventListener('input', () => {
+          document.getElementById('presen-lock-error').textContent = '';
+          const pin = normalizePin(presenInput.value);
+          if (computePinHash(pin) === PRESEN_PASS_HASH) {
+            try { sessionStorage.setItem(PRESEN_SESSION_KEY, '1'); } catch (_) {}
+            closePresenLockModal();
+            openFolderDirect('folder-presen');
           }
         });
       }
     })();
 
     // =====================================================
-    // 2. Accordion & Folder Navigation
+    // 2. Accordion & Folder Navigation (with 777 Gate on Presentation Folder)
     // =====================================================
     function toggleAccordion(id) {
       document.getElementById(id).classList.toggle('open');
     }
 
-    function openFolder(viewId) {
+    function openFolderDirect(viewId) {
       document.querySelectorAll('#acc-folders .folder-view').forEach(v => {
         v.classList.toggle('active', v.id === viewId);
       });
+    }
+
+    function openFolder(viewId) {
+      if (viewId === 'folder-presen' && !isPresenUnlocked()) {
+        const modal = document.getElementById('presen-lock-overlay');
+        const input = document.getElementById('presen-lock-input');
+        const err = document.getElementById('presen-lock-error');
+        if (err) err.textContent = '';
+        if (modal) modal.classList.remove('hidden');
+        if (input) {
+          input.value = '';
+          setTimeout(() => input.focus(), 50);
+        }
+        return;
+      }
+      openFolderDirect(viewId);
+    }
+
+    function closePresenLockModal() {
+      const modal = document.getElementById('presen-lock-overlay');
+      const input = document.getElementById('presen-lock-input');
+      if (modal) modal.classList.add('hidden');
+      if (input) input.value = '';
+    }
+
+    function handlePresenUnlock(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('presen-lock-input');
+      const pin = normalizePin(input.value);
+      if (computePinHash(pin) === PRESEN_PASS_HASH) {
+        try { sessionStorage.setItem(PRESEN_SESSION_KEY, '1'); } catch (_) {}
+        closePresenLockModal();
+        openFolderDirect('folder-presen');
+      } else {
+        document.getElementById('presen-lock-error').textContent = 'プレゼン資料のパスコードが違います';
+        input.value = '';
+        input.focus();
+      }
     }
 
     function copyText(elId, btn) {
