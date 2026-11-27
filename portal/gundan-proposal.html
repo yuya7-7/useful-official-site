@@ -1096,6 +1096,7 @@
     function markPresenSession() {
       try {
         sessionStorage.setItem(SESSION_KEY, '1');
+        localStorage.setItem(SESSION_KEY, '1');
         sessionStorage.setItem(HUB_SESSION_KEY, '1');
         if (sessionStorage.getItem(MODE_SESSION_KEY) !== 'owner') {
           sessionStorage.setItem(MODE_SESSION_KEY, 'presen');
@@ -1135,7 +1136,9 @@
 
     (function initLock() {
       let isUnlocked = false;
-      try { isUnlocked = sessionStorage.getItem(SESSION_KEY) === '1'; } catch (_) {}
+      try {
+        isUnlocked = sessionStorage.getItem(SESSION_KEY) === '1' || localStorage.getItem(SESSION_KEY) === '1';
+      } catch (_) {}
       applyUnlockState(isUnlocked);
       const input = document.getElementById('lock-input');
       if (input) {

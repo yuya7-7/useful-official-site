@@ -1164,10 +1164,10 @@
               <button class="mini-btn" id="presen-back-folder-btn" onclick="openFolder('folder-root')">← フォルダ一覧へ戻る</button>
             </div>
             <div class="scroll-box tall">
-              <a href="gundan-proposal.html" class="file-card featured">
+              <a href="gundan-proposal.html" target="_blank" class="file-card featured">
                 <div class="file-title">
                   <span>🎰 軍団運営・参画プレゼン資料（3つの貢献軸 ＆ 実戦統計デモ3種）</span>
-                  <span style="background:var(--blue); color:#0b1120; font-size:0.78rem; padding:3px 10px; border-radius:999px; white-space:nowrap;">開く →</span>
+                  <span style="background:var(--blue); color:#0b1120; font-size:0.78rem; padding:3px 10px; border-radius:999px; white-space:nowrap;">新しいタブで開く ↗</span>
                 </div>
                 <p class="file-desc">
                   ①軍団の規模の拡大 ②参考にする期待値 ③それを使う人の質 の3軸図解と、「実例①：終了履歴1,210件の負け台特定」「実例②：店舗別・沖ドキ560台実測」「実例③：リコリコ3,810履歴分析＆打ち方完全攻略」をまとめた相手提示用ページ
@@ -1221,10 +1221,22 @@
 
     function isPresenUnlocked() {
       try {
-        return sessionStorage.getItem(PRESEN_SESSION_KEY) === '1';
+        return sessionStorage.getItem(PRESEN_SESSION_KEY) === '1' || localStorage.getItem(PRESEN_SESSION_KEY) === '1';
       } catch (_) {
         return false;
       }
+    }
+
+    function setPresenUnlocked(val) {
+      try {
+        if (val) {
+          sessionStorage.setItem(PRESEN_SESSION_KEY, '1');
+          localStorage.setItem(PRESEN_SESSION_KEY, '1');
+        } else {
+          sessionStorage.removeItem(PRESEN_SESSION_KEY);
+          localStorage.removeItem(PRESEN_SESSION_KEY);
+        }
+      } catch (_) {}
     }
 
     function setSyncStatus(text, color) {
@@ -1273,9 +1285,9 @@
       if (h === PRESEN_PASS_HASH) {
         try {
           sessionStorage.setItem(SESSION_KEY, '1');
-          sessionStorage.setItem(PRESEN_SESSION_KEY, '1');
           sessionStorage.setItem(MODE_SESSION_KEY, 'presen');
         } catch (_) {}
+        setPresenUnlocked(true);
         applyUnlockState(true, 'presen');
         return true;
       }
@@ -1296,9 +1308,9 @@
     function lockPage() {
       try {
         sessionStorage.removeItem(SESSION_KEY);
-        sessionStorage.removeItem(PRESEN_SESSION_KEY);
         sessionStorage.removeItem(MODE_SESSION_KEY);
       } catch (_) {}
+      setPresenUnlocked(false);
       openFolderDirect('folder-root');
       applyUnlockState(false, 'owner');
     }
@@ -1328,9 +1340,10 @@
           document.getElementById('presen-lock-error').textContent = '';
           const pin = normalizePin(presenInput.value);
           if (computePinHash(pin) === PRESEN_PASS_HASH) {
-            try { sessionStorage.setItem(PRESEN_SESSION_KEY, '1'); } catch (_) {}
+            setPresenUnlocked(true);
             closePresenLockModal();
             openFolderDirect('folder-presen');
+            window.open('gundan-proposal.html', '_blank');
           }
         });
       }
@@ -1350,16 +1363,21 @@
     }
 
     function openFolder(viewId) {
-      if (viewId === 'folder-presen' && !isPresenUnlocked()) {
-        const modal = document.getElementById('presen-lock-overlay');
-        const input = document.getElementById('presen-lock-input');
-        const err = document.getElementById('presen-lock-error');
-        if (err) err.textContent = '';
-        if (modal) modal.classList.remove('hidden');
-        if (input) {
-          input.value = '';
-          setTimeout(() => input.focus(), 50);
+      if (viewId === 'folder-presen') {
+        if (!isPresenUnlocked()) {
+          const modal = document.getElementById('presen-lock-overlay');
+          const input = document.getElementById('presen-lock-input');
+          const err = document.getElementById('presen-lock-error');
+          if (err) err.textContent = '';
+          if (modal) modal.classList.remove('hidden');
+          if (input) {
+            input.value = '';
+            setTimeout(() => input.focus(), 50);
+          }
+          return;
         }
+        openFolderDirect('folder-presen');
+        window.open('gundan-proposal.html', '_blank');
         return;
       }
       openFolderDirect(viewId);
@@ -1377,9 +1395,10 @@
       const input = document.getElementById('presen-lock-input');
       const pin = normalizePin(input.value);
       if (computePinHash(pin) === PRESEN_PASS_HASH) {
-        try { sessionStorage.setItem(PRESEN_SESSION_KEY, '1'); } catch (_) {}
+        setPresenUnlocked(true);
         closePresenLockModal();
         openFolderDirect('folder-presen');
+        window.open('gundan-proposal.html', '_blank');
       } else {
         document.getElementById('presen-lock-error').textContent = 'プレゼン資料のパスコードが違います';
         input.value = '';
@@ -1620,8 +1639,8 @@
         const a = document.createElement('a');
         a.className = 'shortcut-item';
         a.href = item.url || '#';
+        a.target = '_blank';
         if (/^https?:\/\//i.test(item.url || '')) {
-          a.target = '_blank';
           a.rel = 'noopener';
         }
 
