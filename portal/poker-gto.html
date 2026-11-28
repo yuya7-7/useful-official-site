@@ -1806,24 +1806,32 @@
 
     function buildSyntheticRankTemplates() {
       const off = document.createElement('canvas');
-      off.width = 48;
-      off.height = 64;
+      off.width = 56;
+      off.height = 72;
       const ctx = off.getContext('2d');
+      const fonts = [
+        '900 42px Arial, sans-serif',
+        'bold 42px "Segoe UI", sans-serif',
+        '900 40px "Arial Black", Impact, sans-serif'
+      ];
 
       RANKS.forEach(r => {
         const text = r === 'T' ? '10' : r;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, off.width, off.height);
-        ctx.fillStyle = '#000000';
-        ctx.font = text === '10' ? '900 34px Arial, sans-serif' : '900 40px Arial, sans-serif';
-        ctx.textBaseline = 'top';
-        ctx.fillText(text, 4, 4);
-        const imgData = ctx.getImageData(0, 0, off.width, off.height);
-        const mask = new Uint8Array(off.width * off.height);
-        for (let i = 0; i < mask.length; i++) {
-          mask[i] = imgData.data[i * 4] < 128 ? 1 : 0;
-        }
-        visionState.syntheticGlyphs[r] = normalizeMaskTo16x24(mask, off.width, off.height);
+        visionState.syntheticGlyphs[r] = [];
+        fonts.forEach(f => {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, off.width, off.height);
+          ctx.fillStyle = '#000000';
+          ctx.font = text === '10' ? f.replace('42px', '34px').replace('40px', '32px') : f;
+          ctx.textBaseline = 'top';
+          ctx.fillText(text, 4, 4);
+          const imgData = ctx.getImageData(0, 0, off.width, off.height);
+          const mask = new Uint8Array(off.width * off.height);
+          for (let i = 0; i < mask.length; i++) {
+            mask[i] = imgData.data[i * 4] < 140 ? 1 : 0;
+          }
+          visionState.syntheticGlyphs[r].push(normalizeMaskTo16x24(mask, off.width, off.height));
+        });
       });
     }
 
@@ -2084,44 +2092,42 @@
       const rankH = Math.floor(ch * 0.62);
       const rankMask = new Uint8Array(cw * rankH);
 
-      for (let y = 0; y < ch; y++) {
-        for (let x = 0; x < cw; x++) {
+      for (let y = 2; y < ch - 2; y++) {
+        for (let x = 2; x < cw - 2; x++) {
           const idx = (y * cw + x) * 4;
           const r = imgData[idx], g = imgData[idx + 1], b = imgData[idx + 2];
           const hsv = rgbToHsv(r, g, b);
 
           if (hsv.v > 75 && hsv.s < 25) {
             whitePixels++;
-          } else if (hsv.v < 90 && (hsv.s > 35 || hsv.v < 48)) {
-            // Foreground ink pixel (colored or dark)
+          } else if (hsv.v < 92 && (hsv.s > 32 || hsv.v < 52)) {
             if (y < rankH) rankMask[y * cw + x] = 1;
-            if (hsv.s > 38 && (hsv.h < 25 || hsv.h > 332)) redInk++;
-            else if (hsv.s > 38 && hsv.h >= 185 && hsv.h <= 255) blueInk++;
-            else if (hsv.s > 35 && hsv.h >= 82 && hsv.h < 175) greenInk++;
-            else if (hsv.v < 45) blackInk++;
+            if (hsv.s > 35 && (hsv.h < 25 || hsv.h > 330)) redInk++;
+            else if (hsv.s > 35 && hsv.h >= 180 && hsv.h <= 260) blueInk++;
+            else if (hsv.s > 32 && hsv.h >= 80 && hsv.h < 178) greenInk++;
+            else if (hsv.v < 50 && hsv.s <= 35) blackInk++;
           }
         }
       }
 
-      const totalPixels = cw * ch;
+      const totalPixels = (cw - 4) * (ch - 4);
       const totalInk = redInk + blueInk + greenInk + blackInk;
-      if (whitePixels < totalPixels * 0.20 || totalInk < 14) {
+      if (whitePixels < totalPixels * 0.18 || totalInk < 10) {
         visionState.lastSlotBitmaps[slotIdx] = null;
         document.getElementById('crop-lbl-' + slotIdx).textContent = SLOT_NAMES[slotIdx];
         return null;
       }
 
       // 2. Determine Suit (♠, ♥, ♦, ♣)
+      // Prioritize chromatic ink (Red / Blue / Green) over dark anti-aliased edge pixels
       let suitObj = SUITS[0]; // default ♠
-      if (visionState.deckColors === 4 || blueInk > 10 || greenInk > 10) {
-        const maxCol = Math.max(redInk, blueInk, greenInk, blackInk);
-        if (maxCol === redInk) suitObj = SUITS[1];      // ♥
-        else if (maxCol === blueInk) suitObj = SUITS[2]; // ♦
-        else if (maxCol === greenInk) suitObj = SUITS[3];// ♣
-        else suitObj = SUITS[0];                         // ♠
+      const maxChroma = Math.max(redInk, blueInk, greenInk);
+      if (maxChroma >= Math.max(8, totalInk * 0.22)) {
+        if (maxChroma === redInk) suitObj = SUITS[1];      // ♥
+        else if (maxChroma === blueInk) suitObj = SUITS[2]; // ♦
+        else suitObj = SUITS[3];                            // ♣
       } else {
-        // 2-color deck fallback: Red (♥/♦) vs Black (♠/♣)
-        suitObj = redInk > blackInk ? SUITS[1] : SUITS[0];
+        suitObj = SUITS[0];                                 // ♠
       }
 
       // 3. Normalize Rank Glyph to 16x24 and match against Learned + Synthetic Templates
@@ -2134,18 +2140,31 @@
       // Check user-learned templates first (highest priority)
       Object.keys(visionState.learnedGlyphs).forEach(r => {
         (visionState.learnedGlyphs[r] || []).forEach(savedBmp => {
-          const sc = compareBitmaps(normBmp, savedBmp) + 0.08;
+          const sc = compareBitmaps(normBmp, savedBmp) + 0.12;
           if (sc > bestScore) { bestScore = sc; bestRank = r; }
         });
       });
 
-      // Check synthetic templates
+      // Check multi-font synthetic templates
       RANKS.forEach(r => {
-        const synBmp = visionState.syntheticGlyphs[r];
-        if (!synBmp) return;
-        const sc = compareBitmaps(normBmp, synBmp);
-        if (sc > bestScore) { bestScore = sc; bestRank = r; }
+        const synList = visionState.syntheticGlyphs[r] || [];
+        synList.forEach(synBmp => {
+          const sc = compareBitmaps(normBmp, synBmp);
+          if (sc > bestScore) { bestScore = sc; bestRank = r; }
+        });
       });
+
+      // Structural disambiguation between A and 4 (A has two bottom legs at left & right; 4 has an empty bottom-left corner)
+      if (bestRank === 'A' || bestRank === '4') {
+        let botLeft = 0, botMid = 0, botRight = 0;
+        for (let y = 19; y < 24; y++) {
+          for (let x = 0; x < 4; x++) botLeft += normBmp[y * 16 + x];
+          for (let x = 6; x < 10; x++) botMid += normBmp[y * 16 + x];
+          for (let x = 12; x < 16; x++) botRight += normBmp[y * 16 + x];
+        }
+        if (botLeft >= 4 && botRight >= 4 && botMid <= 3) bestRank = 'A';
+        else if (botLeft <= 2) bestRank = '4';
+      }
 
       const rankIdx = RANKS.indexOf(bestRank);
       const suitIdx = SUITS.indexOf(suitObj);
