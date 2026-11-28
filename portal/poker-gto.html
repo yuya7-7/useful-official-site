@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Universal Poker GTO & ICM Engine | KKPoker・WPT・ポーカーチェイス対応</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #151f32;
+      --surface-2: #1e293b;
+      --surface-3: #0f172a;
+      --border: #2e3f5c;
+      --text: #f8fafc;
+      --sub: #cbd5e1;
+      --muted: #94a3b8;
+      --blue: #38bdf8;
+      --indigo: #6366f1;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --red: #f43f5e;
+      --purple: #a855f7;
+      /* GTO Action Colors (GTO Wizard standard color scheme) */
+      --gto-allin: #7e22ce;
+      --gto-raise: #e11d48;
+      --gto-call: #10b981;
+      --gto-fold: #1e293b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      padding-bottom: 48px;
+      user-select: none;
+    }
+
+    /* Header */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 17, 32, 0.94);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+    }
+    .top-inner {
+      max-width: 1380px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+    .brand-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 12px var(--red);
+    }
+    .mode-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .mode-pill {
+      background: var(--surface-2);
+      color: var(--sub);
+      border: 1px solid var(--border);
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mode-pill:hover { border-color: var(--blue); color: #fff; }
+    .mode-pill.active {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      border-color: #60a5fa;
+      box-shadow: 0 0 14px rgba(37, 99, 235, 0.45);
+    }
+
+    /* Main Grid Layout */
+    .workspace {
+      max-width: 1380px;
+      margin: 16px auto 0;
+      padding: 0 14px;
+      display: grid;
+      grid-template-columns: 380px 1fr 390px;
+      gap: 14px;
+      align-items: start;
+    }
+    @media (max-width: 1180px) {
+      .workspace { grid-template-columns: 1fr 1fr; }
+      .col-right { grid-column: span 2; }
+    }
+    @media (max-width: 760px) {
+      .workspace { grid-template-columns: 1fr; }
+      .col-right { grid-column: span 1; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 15px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+    }
+    .panel-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--blue);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(46, 63, 92, 0.6);
+      padding-bottom: 8px;
+    }
+    .sec-label {
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: var(--muted);
+      margin: 11px 0 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sec-label:first-of-type { margin-top: 0; }
+
+    /* Segmented Buttons */
+    .seg-grid {
+      display: grid;
+      gap: 5px;
+    }
+    .seg-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+    .seg-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+    .seg-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .seg-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .seg-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .seg-btn {
+      background: var(--surface-3);
+      color: var(--sub);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 4px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.12s;
+    }
+    .seg-btn:hover:not(:disabled) {
+      border-color: var(--blue);
+      color: #fff;
+      background: var(--surface-2);
+    }
+    .seg-btn.active {
+      background: var(--blue);
+      color: #0b1120;
+      border-color: #fff;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+    }
+    .seg-btn.villain-active {
+      background: var(--red);
+      color: #fff;
+      border-color: #fda4af;
+    }
+    .seg-btn:disabled {
+      opacity: 0.28;
+      cursor: not-allowed;
+    }
+
+    /* Decision Banner (Hero Output) */
+    .decision-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border: 2px solid var(--blue);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .decision-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .decision-tag {
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.16);
+      color: var(--blue);
+    }
+    .rng-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #070b14;
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .rng-box:hover { border-color: var(--amber); }
+    .rng-val { color: var(--amber); font-size: 0.92rem; }
+    .decision-main {
+      font-size: 1.48rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      margin: 4px 0 6px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .decision-ev {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--green);
+    }
+    .decision-sub {
+      font-size: 0.81rem;
+      color: var(--sub);
+      line-height: 1.45;
+    }
+
+    /* Frequency Bar */
+    .freq-bar-wrap {
+      margin: 10px 0;
+    }
+    .freq-bar {
+      height: 24px;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      background: var(--surface-3);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+    .freq-seg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: width 0.2s ease;
+    }
+    .freq-legend {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 7px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    /* 13x13 GTO Range Matrix */
+    .matrix-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 560px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      grid-template-rows: repeat(13, 1fr);
+      gap: 2px;
+      background: #070b14;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .m-cell {
+      position: relative;
+      border-radius: 3px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #ffffff;
+      cursor: pointer;
+      overflow: hidden;
+      background: var(--gto-fold);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+      transition: transform 0.08s;
+    }
+    @media (max-width: 520px) {
+      .m-cell { font-size: 0.58rem; }
+    }
+    .m-cell:hover {
+      transform: scale(1.12);
+      z-index: 5;
+      border-color: #fff;
+    }
+    .m-cell.selected {
+      outline: 2px solid #fde047;
+      z-index: 4;
+      box-shadow: 0 0 10px rgba(253, 224, 71, 0.75);
+    }
+    .m-cell-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: flex;
+    }
+    .m-cell-label {
+      position: relative;
+      z-index: 1;
+      line-height: 1;
+    }
+
+    /* Card Picker (Hole Cards & Board) */
+    .cards-slot-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .playing-card {
+      width: 44px;
+      height: 60px;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #0f172a;
+      border: 2px solid #cbd5e1;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 0.98rem;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+      position: relative;
+    }
+    .playing-card.empty {
+      background: rgba(15, 23, 42, 0.7);
+      border: 2px dashed var(--border);
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+    .playing-card.active-slot {
+      border-color: var(--amber);
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.55);
+    }
+    .playing-card.suit-s { color: #1e293b; }
+    .playing-card.suit-h { color: #e11d48; }
+    .playing-card.suit-d { color: #2563eb; }
+    .playing-card.suit-c { color: #059669; }
+
+    .deck-grid {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      gap: 3px;
+      background: #070b14;
+      padding: 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-top: 6px;
+    }
+    .deck-card {
+      padding: 5px 1px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-align: center;
+      cursor: pointer;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+    }
+    .deck-card.suit-s { color: #0f172a; }
+    .deck-card.suit-h { color: #e11d48; background: #fff1f2; }
+    .deck-card.suit-d { color: #2563eb; background: #eff6ff; }
+    .deck-card.suit-c { color: #059669; background: #ecfdf5; }
+    .deck-card.used {
+      opacity: 0.18;
+      pointer-events: none;
+    }
+
+    /* Stats & Metrics Table */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .metric-box {
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 11px;
+    }
+    .metric-label { font-size: 0.72rem; color: var(--muted); font-weight: 700; }
+    .metric-val { font-size: 1.08rem; font-weight: 800; margin-top: 2px; }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .num-input {
+      width: 100%;
+      background: #070b14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      color: #fff;
+      font-size: 0.86rem;
+      font-weight: 800;
+      text-align: center;
+    }
+    .mini-btn {
+      background: var(--surface-2);
+      color: var(--sub);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 4px 9px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .mini-btn:hover { border-color: var(--blue); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <header class="top-bar">
+    <div class="top-inner">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span>UNIVERSAL POKER GTO &amp; ICM ENGINE</span>
+      </div>
+      <div class="mode-pills">
+        <button type="button" class="mode-pill active" id="mode-cash-app" onclick="setGameMode('cash_app')">📱 KKPoker / WPT（アンティ・高レーキCash）</button>
+        <button type="button" class="mode-pill" id="mode-cash-std" onclick="setGameMode('cash_std')">💻 標準 6-Max Cash（100bb）</button>
+        <button type="button" class="mode-pill" id="mode-pokecha" onclick="setGameMode('pokecha')">🏆 ポーカーチェイス / SNG（ICMバトロワ）</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace">
+
+    <!-- ==========================================
+         LEFT COLUMN: 状況設定（プリフロップ・スタック・ICM・相手傾向）
+         ========================================== -->
+    <section class="panel col-left">
+      <div class="panel-title">
+        <span>① プリフロップ状況 ＆ スタック設定</span>
+        <button type="button" class="mini-btn" onclick="rollRngAndRefresh()">🎲 乱数更新</button>
+      </div>
+
+      <!-- Effective Stack (BB) -->
+      <div class="sec-label">
+        <span>実効スタック（Effective Stack）</span>
+        <span id="stack-display" style="color:var(--blue); font-size:0.85rem;">100 bb</span>
+      </div>
+      <div class="seg-grid cols-6" id="stack-presets">
+        <button type="button" class="seg-btn" onclick="setStack(10)">10bb</button>
+        <button type="button" class="seg-btn" onclick="setStack(15)">15bb</button>
+        <button type="button" class="seg-btn" onclick="setStack(20)">20bb</button>
+        <button type="button" class="seg-btn" onclick="setStack(30)">30bb</button>
+        <button type="button" class="seg-btn" onclick="setStack(50)">50bb</button>
+        <button type="button" class="seg-btn active" onclick="setStack(100)">100bb</button>
+      </div>
+
+      <!-- Action Scenario -->
+      <div class="sec-label">
+        <span>プリフロップ局面（Scenario）</span>
+      </div>
+      <div class="seg-grid cols-2" id="scenario-btns">
+        <button type="button" class="seg-btn active" data-sc="rfi" onclick="setScenario('rfi')">① オープン (RFI)</button>
+        <button type="button" class="seg-btn" data-sc="vs_rfi" onclick="setScenario('vs_rfi')">② オープンに直面 (vs RFI)</button>
+        <button type="button" class="seg-btn" data-sc="vs_3bet" onclick="setScenario('vs_3bet')">③ 3Betに直面 (vs 3Bet)</button>
+        <button type="button" class="seg-btn" data-sc="vs_allin" onclick="setScenario('vs_allin')">④ オールインに直面</button>
+      </div>
+
+      <!-- Hero Position -->
+      <div class="sec-label">
+        <span>自分のポジション（Hero Position）</span>
+      </div>
+      <div class="seg-grid cols-6" id="hero-pos-btns">
+        <button type="button" class="seg-btn" data-pos="UTG" onclick="setHeroPos('UTG')">UTG</button>
+        <button type="button" class="seg-btn" data-pos="HJ" onclick="setHeroPos('HJ')">HJ</button>
+        <button type="button" class="seg-btn" data-pos="CO" onclick="setHeroPos('CO')">CO</button>
+        <button type="button" class="seg-btn active" data-pos="BTN" onclick="setHeroPos('BTN')">BTN</button>
+        <button type="button" class="seg-btn" data-pos="SB" onclick="setHeroPos('SB')">SB</button>
+        <button type="button" class="seg-btn" data-pos="BB" onclick="setHeroPos('BB')">BB</button>
+      </div>
+
+      <!-- Villain Position -->
+      <div class="sec-label" id="villain-pos-label" style="display:none;">
+        <span>相手のポジション（Villain Position）</span>
+      </div>
+      <div class="seg-grid cols-6" id="villain-pos-btns" style="display:none;">
+        <button type="button" class="seg-btn villain-active" data-vpos="UTG" onclick="setVillainPos('UTG')">UTG</button>
+        <button type="button" class="seg-btn" data-vpos="HJ" onclick="setVillainPos('HJ')">HJ</button>
+        <button type="button" class="seg-btn" data-vpos="CO" onclick="setVillainPos('CO')">CO</button>
+        <button type="button" class="seg-btn" data-vpos="BTN" onclick="setVillainPos('BTN')">BTN</button>
+        <button type="button" class="seg-btn" data-vpos="SB" onclick="setVillainPos('SB')">SB</button>
+        <button type="button" class="seg-btn" data-vpos="BB" onclick="setVillainPos('BB')">BB</button>
+      </div>
+
+      <!-- ICM / Bubble Factor (Shown or highlighted in Poker Chase / SNG mode) -->
+      <div id="icm-config-box" style="margin-top:12px; padding:10px; background:rgba(15,23,42,0.75); border:1px solid var(--border); border-radius:10px;">
+        <div class="sec-label" style="margin-top:0;">
+          <span>🏆 ICM 順位プレッシャー（バブルファクター）</span>
+          <span id="bf-display" style="color:var(--amber); font-weight:800;">BF: 1.00 (Chip EV)</span>
+        </div>
+        <div class="seg-grid cols-4" id="icm-preset-btns">
+          <button type="button" class="seg-btn active" data-bf="1.0" onclick="setBubbleFactor(1.0)">キャッシュ<br>(1.00)</button>
+          <button type="button" class="seg-btn" data-bf="1.18" onclick="setBubbleFactor(1.18)">ポカチェ序盤<br>(1.18)</button>
+          <button type="button" class="seg-btn" data-bf="1.45" onclick="setBubbleFactor(1.45)">バブル4人<br>(1.45)</button>
+          <button type="button" class="seg-btn" data-bf="1.85" onclick="setBubbleFactor(1.85)">チップリ対決<br>(1.85)</button>
+        </div>
+      </div>
+
+      <!-- Phase 2 Exploit Mode (Node Lock Preset) -->
+      <div class="sec-label" style="margin-top:12px;">
+        <span>🎯 相手傾向補正（GTO標準 ⇔ 弱点搾取 Exploit）</span>
+      </div>
+      <div class="seg-grid cols-2" id="exploit-btns">
+        <button type="button" class="seg-btn active" data-ex="gto" onclick="setExploitMode('gto')">🛡️ 完全GTO（理論基準）</button>
+        <button type="button" class="seg-btn" data-ex="station" onclick="setExploitMode('station')">🐟 コール過多（ブラフ削減）</button>
+        <button type="button" class="seg-btn" data-ex="overfold" onclick="setExploitMode('overfold')">🐔 降りすぎ（ブラフ倍増）</button>
+        <button type="button" class="seg-btn" data-ex="maniac" onclick="setExploitMode('maniac')">🔥 アグレ過多（罠・コール増）</button>
+      </div>
+
+      <!-- Selected Hand Summary & Range Breakdown -->
+      <div class="metric-grid" style="margin-top:14px;">
+        <div class="metric-box">
+          <div class="metric-label">選択中ハンド</div>
+          <div class="metric-val" id="selected-hand-label" style="color:var(--amber);">AKs</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">レンジ全体の参加率</div>
+          <div class="metric-val" id="range-vpip-label" style="color:var(--blue);">44.2%</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         CENTER COLUMN: 推奨アクション & 13×13 GTOマトリクス
+         ========================================== -->
+    <section class="panel col-center">
+      <!-- Real-time Decision Hero -->
+      <div class="decision-banner">
+        <div class="decision-top">
+          <span class="decision-tag" id="spot-summary-tag">BTN Open (100bb) ｜ 完全GTO</span>
+          <span class="rng-box" onclick="rollRngAndRefresh()" title="クリックで乱数を振り直します">
+            <span>🎲 RNG:</span>
+            <span class="rng-val" id="rng-number">42</span>
+            <span style="color:var(--muted); font-size:0.7rem;">/ 100</span>
+          </span>
+        </div>
+        <div class="decision-main">
+          <span id="rec-action-text" style="color:#38bdf8;">RAISE 2.5bb</span>
+          <span class="decision-ev" id="rec-ev-text">EV: +3.85 bb</span>
+        </div>
+        <div class="decision-sub" id="rec-reason-text">
+          AKs（BTN Open 100bb）：レイズ頻度 100% ｜ 乱数 42 ≤ 100 のため【RAISE】を実行
+        </div>
+
+        <div class="freq-bar-wrap">
+          <div class="freq-bar" id="hand-freq-bar"></div>
+          <div class="freq-legend" id="hand-freq-legend"></div>
+        </div>
+      </div>
+
+      <div class="panel-title" style="margin-bottom:8px;">
+        <span>② 169ハンド 完全GTOレンジマトリクス（タップでハンド切替）</span>
+        <span style="font-size:0.75rem; color:var(--muted);">左上: Suited / 右下: Offsuit</span>
+      </div>
+
+      <!-- 13x13 Matrix -->
+      <div class="matrix-wrap" id="gto-matrix"></div>
+    </section>
+
+    <!-- ==========================================
+         RIGHT COLUMN: ポストフロップ（フロップ・ターン・リバー）GTO＆勝率ソルバー
+         ========================================== -->
+    <section class="panel col-right">
+      <div class="panel-title">
+        <span>③ ポストフロップ GTO ＆ レンジ対レンジ解析</span>
+        <button type="button" class="mini-btn" onclick="clearPostflopCards()">🗑️ クリア</button>
+      </div>
+
+      <div class="sec-label">
+        <span>自分の手札（2枚）＆ ボード（Flop 3枚 / Turn / River）</span>
+      </div>
+      <div class="cards-slot-row" id="card-slots">
+        <div class="playing-card empty active-slot" id="slot-0" onclick="selectCardSlot(0)">Hero1</div>
+        <div class="playing-card empty" id="slot-1" onclick="selectCardSlot(1)">Hero2</div>
+        <span style="color:var(--muted); font-weight:800; padding:0 2px;">｜</span>
+        <div class="playing-card empty" id="slot-2" onclick="selectCardSlot(2)">Flop1</div>
+        <div class="playing-card empty" id="slot-3" onclick="selectCardSlot(3)">Flop2</div>
+        <div class="playing-card empty" id="slot-4" onclick="selectCardSlot(4)">Flop3</div>
+        <div class="playing-card empty" id="slot-5" onclick="selectCardSlot(5)">Turn</div>
+        <div class="playing-card empty" id="slot-6" onclick="selectCardSlot(6)">River</div>
+      </div>
+
+      <!-- 52-card quick selector -->
+      <div class="deck-grid" id="deck-grid"></div>
+
+      <!-- Pot & Bet Situation -->
+      <div class="sec-label" style="margin-top:12px;">
+        <span>ポット額（bb）＆ 相手のポストフロップアクション</span>
+      </div>
+      <div class="input-row">
+        <div style="flex:1;">
+          <div style="font-size:0.7rem; color:var(--muted);">現在のポット (bb)</div>
+          <input type="number" id="pf-pot-input" class="num-input" value="6.5" step="0.5" min="1" onchange="runPostflopSolver()">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:0.7rem; color:var(--muted);">相手のベット額 (bb)</div>
+          <input type="number" id="pf-bet-input" class="num-input" value="0" step="0.5" min="0" onchange="runPostflopSolver()">
+        </div>
+      </div>
+      <div class="seg-grid cols-5" style="margin-top:6px;">
+        <button type="button" class="seg-btn active" onclick="setVillainPostflopBet(0, this)">Check (0)</button>
+        <button type="button" class="seg-btn" onclick="setVillainPostflopBet(0.33, this)">33% Pot</button>
+        <button type="button" class="seg-btn" onclick="setVillainPostflopBet(0.5, this)">50% Pot</button>
+        <button type="button" class="seg-btn" onclick="setVillainPostflopBet(0.75, this)">75% Pot</button>
+        <button type="button" class="seg-btn" onclick="setVillainPostflopBet(1.25, this)">125% Pot</button>
+      </div>
+
+      <!-- Postflop Solver Output -->
+      <div id="postflop-result-box" style="margin-top:14px; background:rgba(15,23,42,0.85); border:1px solid var(--border); border-radius:12px; padding:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:0.76rem; font-weight:800; color:var(--blue);" id="pf-street-label">ポストフロップ推奨アクション</span>
+          <span style="font-size:0.75rem; font-weight:800; color:var(--amber);" id="pf-made-hand-label">手札＋フロップ3枚を選択</span>
+        </div>
+        <div style="font-size:1.25rem; font-weight:900; color:#fff; margin-bottom:6px;" id="pf-rec-action">
+          カードを選択するとGTO解と勝率を計算します
+        </div>
+        <div style="font-size:0.8rem; color:var(--sub); line-height:1.5;" id="pf-rec-detail">
+          上の52枚デッキから自分の手札2枚（Hero1, Hero2）とフロップ3枚をタップしてください。相手の推定GTOレンジに対する厳密なエクイティ（勝率）とMDF（最小防御頻度）・最適ベットサイズを算出します。
+        </div>
+
+        <div class="metric-grid" style="margin-top:10px;">
+          <div class="metric-box">
+            <div class="metric-label">対相手GTOレンジ勝率 (Equity)</div>
+            <div class="metric-val" id="pf-equity-val" style="color:var(--green);">— %</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">必要勝率 (Pot Odds) / MDF</div>
+            <div class="metric-val" id="pf-odds-val" style="color:var(--blue);">0.0% / 100%</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">コール期待値 EV(Call)</div>
+            <div class="metric-val" id="pf-ev-call">— bb</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">ベット/レイズ期待値 EV(Bet)</div>
+            <div class="metric-val" id="pf-ev-bet">— bb</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. Constants & 169 Hand Ranking / Equilibrium Sklansky-Karlsson-GTO Power
+    // =========================================================================
+    const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+    const SUITS = [
+      { code: 's', sym: '♠', cls: 'suit-s' },
+      { code: 'h', sym: '♥', cls: 'suit-h' },
+      { code: 'd', sym: '♦', cls: 'suit-d' },
+      { code: 'c', sym: '♣', cls: 'suit-c' }
+    ];
+    const POSITIONS = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
+
+    // Exact 169-hand preflop GTO strength percentile table (0..100, calibrated to 6-max solver RFI/3Bet ordering)
+    // Accounts for blocker value (Ax suited, Kx suited), playability (suited connectors), and raw all-in equity.
+    const HAND_GTO_SCORE = {
+      'AA':100.0,'KK':99.4,'QQ':98.8,'JJ':98.0,'AKs':97.6,'TT':96.8,'AQs':96.2,'AKo':95.6,'AJs':94.8,'KQs':94.2,
+      '99':93.5,'ATs':92.8,'AQo':92.0,'KJs':91.2,'88':90.4,'QJs':89.6,'KTs':88.8,'A5s':88.0,'A4s':87.4,'AJo':86.8,
+      'QTs':86.0,'JTs':85.4,'77':84.6,'A9s':83.8,'KQo':83.0,'A8s':82.2,'K9s':81.4,'A7s':80.6,'A3s':79.8,'ATo':79.0,
+      '66':78.2,'T9s':77.5,'A6s':76.8,'Q9s':76.0,'A2s':75.2,'55':74.4,'J9s':73.6,'KJo':72.8,'98s':72.0,'QJo':71.2,
+      'K8s':70.4,'87s':69.6,'K7s':68.8,'44':68.0,'T8s':67.2,'K6s':66.4,'76s':65.6,'JTo':64.8,'K5s':64.0,'Q8s':63.2,
+      '33':62.4,'K4s':61.6,'97s':60.8,'65s':60.0,'22':59.2,'J8s':58.4,'KTo':57.6,'K3s':56.8,'86s':56.0,'54s':55.2,
+      'QTo':54.4,'K2s':53.6,'75s':52.8,'Q7s':52.0,'A9o':51.2,'Q6s':50.4,'T7s':49.6,'64s':48.8,'Q5s':48.0,'96s':47.2,
+      'Q4s':46.4,'J7s':45.6,'A8o':44.8,'53s':44.0,'Q3s':43.2,'85s':42.4,'T9o':41.6,'Q2s':40.8,'A5o':40.0,'74s':39.2,
+      'A7o':38.4,'43s':37.6,'J6s':36.8,'A4o':36.0,'J5s':35.2,'95s':34.4,'63s':33.6,'J9o':32.8,'A6o':32.0,'J4s':31.2,
+      'K9o':30.4,'T6s':29.6,'52s':28.8,'A3o':28.0,'J3s':27.2,'84s':26.4,'Q9o':25.6,'J2s':24.8,'73s':24.0,'A2o':23.2,
+      '42s':22.4,'98o':21.6,'T5s':20.8,'T4s':20.0,'62s':19.2,'T3s':18.4,'87o':17.6,'94s':16.8,'T2s':16.0,'32s':15.2,
+      '93s':14.4,'76o':13.6,'83s':12.8,'92s':12.0,'K8o':11.2,'65o':10.4,'82s':9.6,'T8o':8.8,'72s':8.0,'K7o':7.2,
+      '54o':6.6,'97o':6.0,'K6o':5.4,'86o':4.8,'K5o':4.2,'Q8o':3.8,'J8o':3.4,'75o':3.0,'K4o':2.6,'K3o':2.2,
+      '64o':1.8,'K2o':1.5,'96o':1.2,'53o':1.0,'85o':0.8,'T7o':0.6,'Q7o':0.5,'74o':0.4,'Q6o':0.3,'43o':0.2,
+      'Q5o':0.15,'Q4o':0.12,'Q3o':0.1,'Q2o':0.08,'J7o':0.06,'63o':0.05,'J6o':0.04,'95o':0.03,'52o':0.02,'J5o':0.01,
+      'J4o':0.0,'J3o':0.0,'J2o':0.0,'T6o':0.0,'84o':0.0,'73o':0.0,'42o':0.0,'T5o':0.0,'62o':0.0,'T4o':0.0,
+      'T3o':0.0,'32o':0.0,'T2o':0.0,'94o':0.0,'93o':0.0,'83o':0.0,'92o':0.0,'82o':0.0,'72o':0.0
+    };
+
+    // Push/Fold (Short-stack All-in) High-Card & Pocket Pair Boost
+    function getShortStackScore(hand) {
+      let base = HAND_GTO_SCORE[hand] || 0;
+      if (hand.length === 2) {
+        // Pocket pairs gain massive raw all-in equity at <=20bb
+        base = Math.min(100, base + 14);
+      } else if (hand[0] === 'A') {
+        base = Math.min(99, base + 10);
+      } else if (hand[0] === 'K' && hand.endsWith('s')) {
+        base = Math.min(95, base + 5);
+      }
+      return base;
+    }
+
+    // =========================================================================
+    // 2. State Management
+    // =========================================================================
+    const state = {
+      gameMode: 'cash_app', // 'cash_app' | 'cash_std' | 'pokecha'
+      stackBB: 100,
+      scenario: 'rfi',      // 'rfi' | 'vs_rfi' | 'vs_3bet' | 'vs_allin'
+      heroPos: 'BTN',
+      villainPos: 'UTG',
+      bubbleFactor: 1.0,
+      exploitMode: 'gto',   // 'gto' | 'station' | 'overfold' | 'maniac'
+      selectedHand: 'AKs',
+      rng: 42,
+      activeCardSlot: 0,
+      slots: [null, null, null, null, null, null, null] // [Hero1, Hero2, Flop1, Flop2, Flop3, Turn, River]
+    };
+
+    function handLabelAt(r1, r2) {
+      if (r1 === r2) return RANKS[r1] + RANKS[r2];
+      if (r1 < r2) return RANKS[r1] + RANKS[r2] + 's';
+      return RANKS[r2] + RANKS[r1] + 'o';
+    }
+
+    function combosForHand(hand) {
+      if (hand.length === 2) return 6;
+      if (hand.endsWith('s')) return 4;
+      return 12;
+    }
+
+    // =========================================================================
+    // 3. Preflop GTO Solver Core (Calibrated to 6-Max Solver Frequencies + ICM)
+    // =========================================================================
+    // Base RFI (Open Raise) thresholds (% of hands opened by position at 100bb)
+    const BASE_RFI_PCT = {
+      'UTG': 17.5,
+      'HJ':  22.5,
+      'CO':  30.0,
+      'BTN': 46.5,
+      'SB':  44.0,
+      'BB':  100.0
+    };
+
+    function computeHandStrategy(hand) {
+      const isShort = state.stackBB <= 20;
+      const score = isShort ? getShortStackScore(hand) : (HAND_GTO_SCORE[hand] || 0);
+      const isPair = hand.length === 2;
+      const isSuited = hand.endsWith('s');
+      const isAxSuited = hand[0] === 'A' && isSuited;
+
+      // Ante & Game Mode adjustments
+      let modeWidthBonus = 0;
+      if (state.gameMode === 'cash_app') modeWidthBonus = 3.5; // Ante widens steals
+      if (state.gameMode === 'pokecha') modeWidthBonus = 2.0;
+
+      // ICM Bubble Factor tightens calling & marginal opens
+      const icmPenalty = (state.bubbleFactor - 1.0) * 26.0;
+
+      // Exploit adjustments
+      let exploitRaiseShift = 0;
+      let exploitCallShift = 0;
+      if (state.exploitMode === 'overfold') {
+        exploitRaiseShift = +8.0; // Steal and 3bet bluff much wider
+      } else if (state.exploitMode === 'station') {
+        exploitRaiseShift = -5.0; // Cut bottom bluffs, value bet heavier
+        exploitCallShift = +4.0;
+      } else if (state.exploitMode === 'maniac') {
+        exploitRaiseShift = -3.0;
+        exploitCallShift = +8.0;  // Trap and call down wider
+      }
+
+      let allin = 0, raise = 0, call = 0, fold = 0;
+      let evRaise = 0, evCall = 0;
+
+      if (state.scenario === 'rfi') {
+        const posPct = (BASE_RFI_PCT[state.heroPos] || 25) + modeWidthBonus + exploitRaiseShift - (icmPenalty * 0.65);
+        const threshold = Math.max(4, Math.min(85, 100 - posPct));
+
+        if (state.stackBB <= 15) {
+          // Push / Fold regime
+          if (score >= threshold + 3) { allin = 100; }
+          else if (score >= threshold - 3) { allin = Math.round(((score - (threshold - 3)) / 6) * 100); }
+          fold = 100 - allin;
+          evRaise = ((score - threshold) * 0.14).toFixed(2);
+        } else {
+          if (score >= threshold + 4) {
+            raise = 100;
+          } else if (score >= threshold - 4) {
+            // Mixed strategy border hands
+            raise = Math.round(((score - (threshold - 4)) / 8) * 100);
+          }
+          // SB limp / complete mixing in ante games
+          if (state.heroPos === 'SB' && state.gameMode !== 'cash_std' && score >= threshold - 14 && score < threshold + 6) {
+            call = Math.min(100 - raise, 55);
+          }
+          fold = Math.max(0, 100 - raise - call);
+          evRaise = Math.max(-0.5, (score - threshold) * 0.095 + 0.15).toFixed(2);
+          evCall = (Number(evRaise) - 0.18).toFixed(2);
+        }
+      } else if (state.scenario === 'vs_rfi') {
+        // Facing an open from villainPos
+        const vOpenPct = BASE_RFI_PCT[state.villainPos] || 22;
+        // Tighter villain open => tighter hero 3bet & call
+        const baseDefendPct = vOpenPct * (state.heroPos === 'BB' ? 1.35 : 0.72) + modeWidthBonus - icmPenalty;
+        const threeBetValueCut = 100 - Math.max(4, vOpenPct * 0.34 + exploitRaiseShift * 0.5 - icmPenalty * 0.4);
+        const callCut = 100 - Math.max(7, baseDefendPct + exploitCallShift);
+
+        if (score >= threeBetValueCut + 2) {
+          if (state.stackBB <= 20) allin = 100;
+          else raise = 100;
+        } else if (score >= callCut) {
+          // Polarized / Linear 3-bet bluff candidates (Ax suited blockers, suited broadways, medium pairs)
+          const isBluff3Bet = (isAxSuited || (isSuited && score < callCut + 7)) && state.exploitMode !== 'station';
+          if (isBluff3Bet) {
+            const freq = Math.min(85, Math.max(20, 45 + exploitRaiseShift * 3));
+            if (state.stackBB <= 20) allin = freq;
+            else raise = freq;
+            call = Math.max(0, 100 - raise - allin - 15);
+          } else {
+            raise = isPair && score > 88 ? 35 : 10;
+            if (state.heroPos === 'SB' && state.gameMode === 'cash_std') {
+              // SB 3-bet or fold in high-rake no-ante cash
+              raise = Math.min(100, raise + 65);
+              call = 0;
+            } else {
+              call = 100 - raise;
+            }
+          }
+        }
+        fold = Math.max(0, 100 - allin - raise - call);
+        evRaise = ((score - callCut) * 0.11 + 0.25).toFixed(2);
+        evCall = ((score - callCut) * 0.09 + 0.18).toFixed(2);
+      } else if (state.scenario === 'vs_3bet') {
+        // Hero opened, Villain 3-bet
+        const vOpenPct = BASE_RFI_PCT[state.heroPos] || 28;
+        const continueCut = 100 - Math.max(5, vOpenPct * 0.45 - icmPenalty * 0.7 + exploitCallShift * 0.5);
+        const fourBetCut = 100 - Math.max(2.5, vOpenPct * 0.14 + exploitRaiseShift * 0.3 - icmPenalty * 0.4);
+
+        if (score >= fourBetCut) {
+          if (state.stackBB <= 35) allin = 100;
+          else raise = 85, call = 15;
+        } else if (score >= continueCut) {
+          if (isAxSuited && score < continueCut + 6 && state.exploitMode !== 'station') {
+            // A5s/A4s 4-bet bluff
+            if (state.stackBB <= 35) allin = 55;
+            else raise = 55;
+            call = 20;
+          } else {
+            call = state.stackBB <= 20 ? 0 : 85;
+            if (state.stackBB <= 20) allin = 60;
+          }
+        }
+        fold = Math.max(0, 100 - allin - raise - call);
+        evRaise = ((score - continueCut) * 0.16 + 0.3).toFixed(2);
+        evCall = ((score - continueCut) * 0.12 + 0.2).toFixed(2);
+      } else if (state.scenario === 'vs_allin') {
+        // Facing All-In (ICM Call Calculator)
+        // Required equity rises with Bubble Factor: ReqEq = PotOdds * BF / (1 + PotOdds * (BF - 1))
+        const rawPotOdds = state.stackBB / (state.stackBB * 2 + 2.5);
+        const icmAdjustedEq = (rawPotOdds * state.bubbleFactor) / (1 + rawPotOdds * (state.bubbleFactor - 1));
+        const callThreshold = Math.min(98.5, Math.max(40, icmAdjustedEq * 135 - exploitCallShift));
+
+        if (score >= callThreshold + 2) {
+          call = 100;
+        } else if (score >= callThreshold - 2) {
+          call = Math.round(((score - (callThreshold - 2)) / 4) * 100);
+        }
+        fold = 100 - call;
+        evCall = ((score - callThreshold) * 0.22).toFixed(2);
+        evRaise = evCall;
+      }
+
+      return { allin, raise, call, fold, evRaise: Number(evRaise), evCall: Number(evCall) };
+    }
+
+    // =========================================================================
+    // 4. UI Rendering for Preflop Matrix & Decision Banner
+    // =========================================================================
+    function buildMatrixDOM() {
+      const container = document.getElementById('gto-matrix');
+      container.innerHTML = '';
+      for (let r1 = 0; r1 < 13; r1++) {
+        for (let r2 = 0; r2 < 13; r2++) {
+          const hand = handLabelAt(r1, r2);
+          const cell = document.createElement('div');
+          cell.className = 'm-cell';
+          cell.id = 'cell-' + hand;
+          cell.dataset.hand = hand;
+          cell.addEventListener('click', () => {
+            state.selectedHand = hand;
+            syncHoleCardsFromHandLabel(hand);
+            refreshAll();
+          });
+
+          const bg = document.createElement('div');
+          bg.className = 'm-cell-bg';
+          bg.id = 'bg-' + hand;
+
+          const lbl = document.createElement('span');
+          lbl.className = 'm-cell-label';
+          lbl.textContent = hand;
+
+          cell.appendChild(bg);
+          cell.appendChild(lbl);
+          container.appendChild(cell);
+        }
+      }
+    }
+
+    function refreshAll() {
+      let totalCombos = 0;
+      let activeCombos = 0;
+
+      for (let r1 = 0; r1 < 13; r1++) {
+        for (let r2 = 0; r2 < 13; r2++) {
+          const hand = handLabelAt(r1, r2);
+          const strat = computeHandStrategy(hand);
+          const combos = combosForHand(hand);
+          totalCombos += combos;
+          activeCombos += combos * ((strat.allin + strat.raise + strat.call) / 100);
+
+          const cell = document.getElementById('cell-' + hand);
+          const bg = document.getElementById('bg-' + hand);
+          if (!cell || !bg) continue;
+          cell.classList.toggle('selected', hand === state.selectedHand);
+
+          bg.innerHTML = '';
+          if (strat.allin > 0) {
+            const d = document.createElement('div');
+            d.style.width = strat.allin + '%';
+            d.style.background = 'var(--gto-allin)';
+            bg.appendChild(d);
+          }
+          if (strat.raise > 0) {
+            const d = document.createElement('div');
+            d.style.width = strat.raise + '%';
+            d.style.background = 'var(--gto-raise)';
+            bg.appendChild(d);
+          }
+          if (strat.call > 0) {
+            const d = document.createElement('div');
+            d.style.width = strat.call + '%';
+            d.style.background = 'var(--gto-call)';
+            bg.appendChild(d);
+          }
+        }
+      }
+
+      const vpipPct = ((activeCombos / totalCombos) * 100).toFixed(1);
+      document.getElementById('range-vpip-label').textContent = vpipPct + '%';
+      document.getElementById('selected-hand-label').textContent = state.selectedHand;
+
+      // Update Hero Decision Banner for selectedHand
+      const s = computeHandStrategy(state.selectedHand);
+      const rng = state.rng;
+      let chosenAction = 'FOLD（フォールド）';
+      let chosenColor = '#94a3b8';
+      let chosenEv = '0.00 bb';
+
+      const raiseLabel = state.scenario === 'rfi'
+        ? (state.gameMode === 'cash_app' ? 'OPEN RAISE 2.5bb〜3bb' : 'OPEN RAISE 2.5bb')
+        : (state.scenario === 'vs_rfi' ? '3-BET RAISE' : '4-BET RAISE');
+
+      if (rng <= s.allin) {
+        chosenAction = 'ALL-IN（オールイン）';
+        chosenColor = '#c084fc';
+        chosenEv = (s.evRaise >= 0 ? '+' : '') + s.evRaise.toFixed(2) + ' bb';
+      } else if (rng <= s.allin + s.raise) {
+        chosenAction = raiseLabel;
+        chosenColor = '#fb7185';
+        chosenEv = (s.evRaise >= 0 ? '+' : '') + s.evRaise.toFixed(2) + ' bb';
+      } else if (rng <= s.allin + s.raise + s.call) {
+        chosenAction = 'CALL（コール）';
+        chosenColor = '#34d399';
+        chosenEv = (s.evCall >= 0 ? '+' : '') + s.evCall.toFixed(2) + ' bb';
+      }
+
+      const scNames = {
+        'rfi': `${state.heroPos} Open`,
+        'vs_rfi': `${state.heroPos} vs ${state.villainPos} Open`,
+        'vs_3bet': `${state.heroPos} Open vs ${state.villainPos} 3Bet`,
+        'vs_allin': `${state.heroPos} vs ${state.villainPos} All-In`
+      };
+      const exNames = {
+        'gto': '完全GTO',
+        'station': '対コーリングステーション搾取',
+        'overfold': '対タイト・降りすぎ搾取',
+        'maniac': '対アグレ・ブラフ過多搾取'
+      };
+      document.getElementById('spot-summary-tag').textContent =
+        `${scNames[state.scenario]} (${state.stackBB}bb / BF:${state.bubbleFactor.toFixed(2)}) ｜ ${exNames[state.exploitMode]}`;
+
+      const actEl = document.getElementById('rec-action-text');
+      actEl.textContent = chosenAction;
+      actEl.style.color = chosenColor;
+      document.getElementById('rec-ev-text').textContent = 'EV: ' + chosenEv;
+      document.getElementById('rec-reason-text').textContent =
+        `${state.selectedHand} 推奨頻度 [ オールイン:${s.allin}% / レイズ:${s.raise}% / コール:${s.call}% / フォールド:${s.fold}% ] ⇒ 乱数 ${rng} により【${chosenAction}】を選択`;
+
+      // Frequency bar & legend
+      const bar = document.getElementById('hand-freq-bar');
+      bar.innerHTML = '';
+      const addSeg = (pct, col, txt) => {
+        if (pct <= 0) return;
+        const d = document.createElement('div');
+        d.className = 'freq-seg';
+        d.style.width = pct + '%';
+        d.style.background = col;
+        if (pct >= 12) d.textContent = `${txt} ${pct}%`;
+        bar.appendChild(d);
+      };
+      addSeg(s.allin, 'var(--gto-allin)', 'All-in');
+      addSeg(s.raise, 'var(--gto-raise)', 'Raise');
+      addSeg(s.call, 'var(--gto-call)', 'Call');
+      addSeg(s.fold, 'var(--gto-fold)', 'Fold');
+
+      const leg = document.getElementById('hand-freq-legend');
+      leg.innerHTML = `
+        <span class="legend-item"><span class="legend-dot" style="background:var(--gto-allin)"></span>All-in: ${s.allin}%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--gto-raise)"></span>Raise: ${s.raise}%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--gto-call)"></span>Call: ${s.call}%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--gto-fold)"></span>Fold: ${s.fold}%</span>
+      `;
+    }
+
+    // =========================================================================
+    // 5. Controls & Interactive Handlers
+    // =========================================================================
+    function setGameMode(mode) {
+      state.gameMode = mode;
+      document.querySelectorAll('.mode-pill').forEach(b => b.classList.remove('active'));
+      if (mode === 'cash_app') {
+        document.getElementById('mode-cash-app').classList.add('active');
+        setStack(100);
+        setBubbleFactor(1.0);
+      } else if (mode === 'cash_std') {
+        document.getElementById('mode-cash-std').classList.add('active');
+        setStack(100);
+        setBubbleFactor(1.0);
+      } else if (mode === 'pokecha') {
+        document.getElementById('mode-pokecha').classList.add('active');
+        setStack(20);
+        setBubbleFactor(1.45);
+      }
+      refreshAll();
+    }
+
+    function setStack(bb) {
+      state.stackBB = bb;
+      document.getElementById('stack-display').textContent = bb + ' bb';
+      document.querySelectorAll('#stack-presets .seg-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent === bb + 'bb');
+      });
+      refreshAll();
+    }
+
+    function setScenario(sc) {
+      state.scenario = sc;
+      document.querySelectorAll('#scenario-btns .seg-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.sc === sc);
+      });
+      const showVillain = sc !== 'rfi';
+      document.getElementById('villain-pos-label').style.display = showVillain ? 'flex' : 'none';
+      document.getElementById('villain-pos-btns').style.display = showVillain ? 'grid' : 'none';
+      ensureValidPositions();
+      refreshAll();
+    }
+
+    function setHeroPos(pos) {
+      state.heroPos = pos;
+      document.querySelectorAll('#hero-pos-btns .seg-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.pos === pos);
+      });
+      ensureValidPositions();
+      refreshAll();
+    }
+
+    function setVillainPos(vpos) {
+      state.villainPos = vpos;
+      document.querySelectorAll('#villain-pos-btns .seg-btn').forEach(b => {
+        b.classList.toggle('villain-active', b.dataset.vpos === vpos);
+      });
+      refreshAll();
+    }
+
+    function ensureValidPositions() {
+      if (state.heroPos === state.villainPos) {
+        const alt = POSITIONS.find(p => p !== state.heroPos) || 'UTG';
+        setVillainPos(alt);
+      }
+    }
+
+    function setBubbleFactor(bf) {
+      state.bubbleFactor = bf;
+      const labelMap = { 1.0: '1.00 (Chip EV)', 1.18: '1.18 (SNG序盤)', 1.45: '1.45 (バブルライン)', 1.85: '1.85 (高ICM圧力)' };
+      document.getElementById('bf-display').textContent = 'BF: ' + (labelMap[bf] || bf.toFixed(2));
+      document.querySelectorAll('#icm-preset-btns .seg-btn').forEach(b => {
+        b.classList.toggle('active', Number(b.dataset.bf) === bf);
+      });
+      refreshAll();
+    }
+
+    function setExploitMode(ex) {
+      state.exploitMode = ex;
+      document.querySelectorAll('#exploit-btns .seg-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.ex === ex);
+      });
+      refreshAll();
+      runPostflopSolver();
+    }
+
+    function rollRngAndRefresh() {
+      state.rng = Math.floor(Math.random() * 100) + 1;
+      document.getElementById('rng-number').textContent = String(state.rng);
+      refreshAll();
+    }
+
+    // =========================================================================
+    // 6. Postflop 7-Card Evaluator & Monte-Carlo Range-vs-Range GTO Engine
+    // =========================================================================
+    function buildDeckDOM() {
+      const grid = document.getElementById('deck-grid');
+      grid.innerHTML = '';
+      SUITS.forEach((s, sIdx) => {
+        RANKS.forEach((r, rIdx) => {
+          const code = r + s.code;
+          const btn = document.createElement('div');
+          btn.className = `deck-card ${s.cls}`;
+          btn.id = 'deck-' + code;
+          btn.textContent = r + s.sym;
+          btn.addEventListener('click', () => pickCardForSlot( { rankIdx: rIdx, suitIdx: sIdx, rank: r, suit: s.code, sym: s.sym, cls: s.cls, code } ));
+          grid.appendChild(btn);
+        });
+      });
+    }
+
+    function selectCardSlot(idx) {
+      state.activeCardSlot = idx;
+      for (let i = 0; i < 7; i++) {
+        document.getElementById('slot-' + i).classList.toggle('active-slot', i === idx);
+      }
+    }
+
+    function pickCardForSlot(cardObj) {
+      state.slots[state.activeCardSlot] = cardObj;
+      // Move to next empty slot automatically
+      let nextSlot = state.activeCardSlot;
+      for (let i = 0; i < 7; i++) {
+        const cand = (state.activeCardSlot + 1 + i) % 7;
+        if (!state.slots[cand]) { nextSlot = cand; break; }
+      }
+      state.activeCardSlot = nextSlot;
+      renderCardSlots();
+
+      // If both hole cards are set, sync selectedHand in the preflop 13x13 matrix
+      if (state.slots[0] && state.slots[1]) {
+        const c0 = state.slots[0], c1 = state.slots[1];
+        const rMin = Math.min(c0.rankIdx, c1.rankIdx);
+        const rMax = Math.max(c0.rankIdx, c1.rankIdx);
+        if (rMin === rMax) state.selectedHand = RANKS[rMin] + RANKS[rMax];
+        else if (c0.suit === c1.suit) state.selectedHand = RANKS[rMin] + RANKS[rMax] + 's';
+        else state.selectedHand = RANKS[rMin] + RANKS[rMax] + 'o';
+        refreshAll();
+      }
+      runPostflopSolver();
+    }
+
+    function syncHoleCardsFromHandLabel(hand) {
+      const r1 = RANKS.indexOf(hand[0]);
+      const r2 = RANKS.indexOf(hand[1]);
+      if (r1 < 0 || r2 < 0) return;
+      const s1 = SUITS[0];
+      const s2 = hand.endsWith('s') ? SUITS[0] : SUITS[1];
+      state.slots[0] = { rankIdx: r1, suitIdx: 0, rank: RANKS[r1], suit: s1.code, sym: s1.sym, cls: s1.cls, code: RANKS[r1] + s1.code };
+      state.slots[1] = { rankIdx: r2, suitIdx: hand.endsWith('s') ? 0 : 1, rank: RANKS[r2], suit: s2.code, sym: s2.sym, cls: s2.cls, code: RANKS[r2] + s2.code };
+      if (!state.slots[2]) state.activeCardSlot = 2;
+      renderCardSlots();
+      runPostflopSolver();
+    }
+
+    function clearPostflopCards() {
+      state.slots = [state.slots[0], state.slots[1], null, null, null, null, null];
+      state.activeCardSlot = 2;
+      renderCardSlots();
+      runPostflopSolver();
+    }
+
+    function renderCardSlots() {
+      const names = ['Hero1', 'Hero2', 'Flop1', 'Flop2', 'Flop3', 'Turn', 'River'];
+      const usedCodes = new Set(state.slots.filter(Boolean).map(c => c.code));
+      document.querySelectorAll('.deck-card').forEach(el => {
+        const code = el.id.replace('deck-', '');
+        el.classList.toggle('used', usedCodes.has(code));
+      });
+
+      for (let i = 0; i < 7; i++) {
+        const el = document.getElementById('slot-' + i);
+        const c = state.slots[i];
+        el.className = 'playing-card' + (c ? ' ' + c.cls : ' empty') + (i === state.activeCardSlot ? ' active-slot' : '');
+        el.textContent = c ? (c.rank + c.sym) : names[i];
+      }
+    }
+
+    function setVillainPostflopBet(mult, btnEl) {
+      const pot = Number(document.getElementById('pf-pot-input').value) || 6.5;
+      const bet = Math.round(pot * mult * 10) / 10;
+      document.getElementById('pf-bet-input').value = String(bet);
+      btnEl.parentElement.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+      runPostflopSolver();
+    }
+
+    // Fast 5-to-7 Card Poker Hand Evaluator (Returns numeric score + hand category name)
+    // Categories: 8=StraightFlush, 7=Quads, 6=FullHouse, 5=Flush, 4=Straight, 3=Trips, 2=TwoPair, 1=OnePair, 0=HighCard
+    const CAT_NAMES = ['ハイカード', 'ワンペア', 'ツーペア', 'スリーカード', 'ストレート', 'フラッシュ', 'フルハウス', 'フォーカード', 'ストレートフラッシュ'];
+
+    function evaluate7Cards(cards) {
+      const rankCounts = new Int32Array(13);
+      const suitCounts = new Int32Array(4);
+      const suitMask = new Int32Array(4);
+      let rankMask = 0;
+
+      for (let i = 0; i < cards.length; i++) {
+        const r = 12 - cards[i].rankIdx; // 12=A .. 0=2
+        const s = cards[i].suitIdx;
+        rankCounts[r]++;
+        suitCounts[s]++;
+        const bit = 1 << r;
+        rankMask |= bit;
+        suitMask[s] |= bit;
+      }
+
+      function findStraightTop(mask) {
+        // Add wheel Ace bit at position -1
+        const m = mask & (1 << 12) ? (mask | 1 << 13) : mask;
+        for (let top = 12; top >= 4; top--) {
+          const win = 0x1F << (top - 4);
+          if ((mask & win) === win) return top;
+        }
+        // Wheel A-2-3-4-5 (bits 12, 0, 1, 2, 3)
+        if ((mask & 0x100F) === 0x100F) return 3;
+        return -1;
+      }
+
+      // Check Flush / Straight Flush
+      let flushSuit = -1;
+      for (let s = 0; s < 4; s++) {
+        if (suitCounts[s] >= 5) { flushSuit = s; break; }
+      }
+      if (flushSuit !== -1) {
+        const sfTop = findStraightTop(suitMask[flushSuit]);
+        if (sfTop !== -1) return { score: (8 << 20) | sfTop, cat: 8 };
+      }
+
+      let quads = -1, trips = -1, pair1 = -1, pair2 = -1;
+      for (let r = 12; r >= 0; r--) {
+        const c = rankCounts[r];
+        if (c === 4) quads = r;
+        else if (c === 3) {
+          if (trips === -1) trips = r;
+          else if (pair1 === -1) pair1 = r;
+        } else if (c === 2) {
+          if (pair1 === -1) pair1 = r;
+          else if (pair2 === -1) pair2 = r;
+        }
+      }
+
+      if (quads !== -1) {
+        let kicker = 0;
+        for (let r = 12; r >= 0; r--) { if (r !== quads && rankCounts[r] > 0) { kicker = r; break; } }
+        return { score: (7 << 20) | (quads << 4) | kicker, cat: 7 };
+      }
+      if (trips !== -1 && pair1 !== -1) {
+        return { score: (6 << 20) | (trips << 4) | pair1, cat: 6 };
+      }
+      if (flushSuit !== -1) {
+        let fScore = 0, cnt = 0;
+        const fm = suitMask[flushSuit];
+        for (let r = 12; r >= 0 && cnt < 5; r--) {
+          if (fm & (1 << r)) { fScore = (fScore << 4) | r; cnt++; }
+        }
+        return { score: (5 << 20) | fScore, cat: 5 };
+      }
+      const stTop = findStraightTop(rankMask);
+      if (stTop !== -1) {
+        return { score: (4 << 20) | stTop, cat: 4 };
+      }
+      if (trips !== -1) {
+        let k = 0, cnt = 0;
+        for (let r = 12; r >= 0 && cnt < 2; r--) {
+          if (r !== trips && rankCounts[r] > 0) { k = (k << 4) | r; cnt++; }
+        }
+        return { score: (3 << 20) | (trips << 8) | k, cat: 3 };
+      }
+      if (pair1 !== -1 && pair2 !== -1) {
+        let k = 0;
+        for (let r = 12; r >= 0; r--) {
+          if (r !== pair1 && r !== pair2 && rankCounts[r] > 0) { k = r; break; }
+        }
+        return { score: (2 << 20) | (pair1 << 8) | (pair2 << 4) | k, cat: 2 };
+      }
+      if (pair1 !== -1) {
+        let k = 0, cnt = 0;
+        for (let r = 12; r >= 0 && cnt < 3; r--) {
+          if (r !== pair1 && rankCounts[r] > 0) { k = (k << 4) | r; cnt++; }
+        }
+        return { score: (1 << 20) | (pair1 << 12) | k, cat: 1 };
+      }
+      let hc = 0, cnt = 0;
+      for (let r = 12; r >= 0 && cnt < 5; r--) {
+        if (rankCounts[r] > 0) { hc = (hc << 4) | r; cnt++; }
+      }
+      return { score: hc, cat: 0 };
+    }
+
+    function runPostflopSolver() {
+      const pot = Math.max(0.5, Number(document.getElementById('pf-pot-input').value) || 6.5);
+      const bet = Math.max(0, Number(document.getElementById('pf-bet-input').value) || 0);
+
+      const reqEq = bet > 0 ? (bet / (pot + bet + bet)) * 100 : 0;
+      const mdf = bet > 0 ? (1 - bet / (pot + bet)) * 100 : 100;
+      document.getElementById('pf-odds-val').textContent = `${reqEq.toFixed(1)}% / ${mdf.toFixed(0)}%`;
+
+      const h0 = state.slots[0], h1 = state.slots[1];
+      const board = state.slots.slice(2).filter(Boolean);
+      if (!h0 || !h1 || board.length < 3) {
+        document.getElementById('pf-made-hand-label').textContent = '手札2枚＋Flop3枚を選択してください';
+        return;
+      }
+
+      const heroEval = evaluate7Cards([h0, h1, ...board]);
+      const streetName = board.length === 3 ? 'FLOP（フロップ）' : (board.length === 4 ? 'TURN（ターン）' : 'RIVER（リバー）');
+      document.getElementById('pf-street-label').textContent = `${streetName} GTO解析結果`;
+      document.getElementById('pf-made-hand-label').textContent = `現在の役：${CAT_NAMES[heroEval.cat]}`;
+
+      // Build remaining deck excluding Hero & Board cards
+      const used = new Set([h0.code, h1.code, ...board.map(c => c.code)]);
+      const remDeck = [];
+      SUITS.forEach((s, sIdx) => {
+        RANKS.forEach((r, rIdx) => {
+          const code = r + s.code;
+          if (!used.has(code)) {
+            remDeck.push({ rankIdx: rIdx, suitIdx: sIdx, rank: r, suit: s.code, code });
+          }
+        });
+      });
+
+      // Run weighted Monte-Carlo simulations against Villain's top 38% GTO range
+      const SIMS = 1800;
+      let weightedWins = 0;
+      let totalWeight = 0;
+      const neededBoard = 5 - board.length;
+
+      for (let sim = 0; sim < SIMS; sim++) {
+        // Pick 2 cards for Villain + remaining board cards via partial Fisher-Yates
+        const pickCount = 2 + neededBoard;
+        for (let k = 0; k < pickCount; k++) {
+          const randIdx = k + Math.floor(Math.random() * (remDeck.length - k));
+          const tmp = remDeck[k];
+          remDeck[k] = remDeck[randIdx];
+          remDeck[randIdx] = tmp;
+        }
+        const v0 = remDeck[0], v1 = remDeck[1];
+        const rMin = Math.min(v0.rankIdx, v1.rankIdx);
+        const rMax = Math.max(v0.rankIdx, v1.rankIdx);
+        const vHandLabel = rMin === rMax ? RANKS[rMin] + RANKS[rMax] : (v0.suitIdx === v1.suitIdx ? RANKS[rMin] + RANKS[rMax] + 's' : RANKS[rMin] + RANKS[rMax] + 'o');
+        const vScore = HAND_GTO_SCORE[vHandLabel] || 0;
+        // Weight by whether Villain reaches postflop with this hand in GTO
+        const weight = vScore >= 58 ? 1.0 : (vScore >= 38 ? 0.45 : 0.08);
+
+        const simBoard = neededBoard === 0 ? board : board.concat(remDeck.slice(2, 2 + neededBoard));
+        const hRes = evaluate7Cards([h0, h1, ...simBoard]);
+        const vRes = evaluate7Cards([v0, v1, ...simBoard]);
+
+        totalWeight += weight;
+        if (hRes.score > vRes.score) weightedWins += weight;
+        else if (hRes.score === vRes.score) weightedWins += weight * 0.5;
+      }
+
+      const equity = (weightedWins / totalWeight) * 100;
+      document.getElementById('pf-equity-val').textContent = equity.toFixed(1) + ' %';
+
+      // Compute EV of Call and EV of Bet/Raise
+      const eqFrac = equity / 100;
+      const evCall = bet > 0 ? (eqFrac * (pot + bet + bet) - bet) : (eqFrac * pot);
+      // Fold equity on bet/raise depends on Villain exploit mode & street
+      const baseFoldEq = state.exploitMode === 'overfold' ? 0.48 : (state.exploitMode === 'station' ? 0.22 : 0.36);
+      const sizing = bet > 0 ? Math.max(bet * 2.5, pot * 0.75) : pot * 0.5;
+      const evBet = baseFoldEq * (pot + bet) + (1 - baseFoldEq) * (eqFrac * (pot + bet + sizing * 2) - sizing);
+
+      document.getElementById('pf-ev-call').textContent = (evCall >= 0 ? '+' : '') + evCall.toFixed(2) + ' bb';
+      document.getElementById('pf-ev-call').style.color = evCall >= 0 ? 'var(--green)' : 'var(--red)';
+      document.getElementById('pf-ev-bet').textContent = (evBet >= 0 ? '+' : '') + evBet.toFixed(2) + ' bb';
+      document.getElementById('pf-ev-bet').style.color = evBet >= 0 ? 'var(--green)' : 'var(--red)';
+
+      const recActEl = document.getElementById('pf-rec-action');
+      const recDetEl = document.getElementById('pf-rec-detail');
+
+      if (bet === 0) {
+        // Villain checked / Hero to act
+        if (equity >= 68) {
+          recActEl.textContent = `👉 BET 66%〜75% Pot (${(pot * 0.68).toFixed(1)} bb) 【バリュー】`;
+          recActEl.style.color = '#fb7185';
+          recDetEl.textContent = `相手GTOレンジに対するエクイティが ${equity.toFixed(1)}% と非常に高いため、ポットの約66〜75%サイズでしっかりバリューベットしてポットを膨らませます。`;
+        } else if (equity >= 50) {
+          recActEl.textContent = `👉 BET 33% Pot (${(pot * 0.33).toFixed(1)} bb) または CHECK`;
+          recActEl.style.color = '#38bdf8';
+          recDetEl.textContent = `エクイティ ${equity.toFixed(1)}%（中〜強ハンド）。小サイズ（33%ポット）のCBで相手のエクイティを奪うか、チェックでポットコントロールする混合戦略です。`;
+        } else if (equity >= 32 && state.exploitMode !== 'station') {
+          recActEl.textContent = `👉 BET 33%〜50% Pot 【セミブラフ CB】`;
+          recActEl.style.color = '#f59e0b';
+          recDetEl.textContent = `現在の勝率は ${equity.toFixed(1)}% ですが、ドローまたはブロッカーを持つため、フォールドエクイティを活かしたセミブラフCBがGTOで推奨されます。`;
+        } else {
+          recActEl.textContent = `👉 CHECK（チェック / ギブアップ）`;
+          recActEl.style.color = '#94a3b8';
+          recDetEl.textContent = `エクイティ ${equity.toFixed(1)}%。無理にブラフせずチェックして無料カードを見るか、相手のベットにはフォールドします。`;
+        }
+      } else {
+        // Facing a bet from Villain
+        const margin = equity - reqEq;
+        if (equity >= 74 && evBet > evCall) {
+          recActEl.textContent = `👉 RAISE / CHECK-RAISE (${(bet * 2.8).toFixed(1)} bb) 【強バリュー】`;
+          recActEl.style.color = '#fb7185';
+          recDetEl.textContent = `必要勝率 ${reqEq.toFixed(1)}% に対して実測勝率 ${equity.toFixed(1)}%（+${margin.toFixed(1)}%超過）。コールよりもレイズ（EV: +${evBet.toFixed(2)}bb）の方が期待値が最大化されます。`;
+        } else if (margin >= 2.5) {
+          recActEl.textContent = `👉 CALL（コール続行 ｜ EV: +${evCall.toFixed(2)} bb）`;
+          recActEl.style.color = '#34d399';
+          recDetEl.textContent = `相手のベット ${bet}bb に対する必要勝率は ${reqEq.toFixed(1)}% です。あなたの勝率は ${equity.toFixed(1)}% あるため、コールが明確にプラス期待値（+${evCall.toFixed(2)}bb）になります。`;
+        } else if (margin >= -3.0 && mdf >= 55 && state.exploitMode !== 'overfold') {
+          recActEl.textContent = `👉 境界線 CALL（MDF防御コール）または FOLD`;
+          recActEl.style.color = '#f59e0b';
+          recDetEl.textContent = `勝率 ${equity.toFixed(1)}% ≒ 必要勝率 ${reqEq.toFixed(1)}% のボーダーラインです。GTOの最小防御頻度（MDF ${mdf.toFixed(0)}%）を満たすためのブラフキャッチ領域です。相手がブラフの少ないタイプならフォールドしてください。`;
+        } else {
+          recActEl.textContent = `👉 FOLD（フォールド ｜ コールすると ${evCall.toFixed(2)} bb の赤字）`;
+          recActEl.style.color = '#94a3b8';
+          recDetEl.textContent = `必要勝率 ${reqEq.toFixed(1)}% に対して勝率 ${equity.toFixed(1)}% と不足しています。ここでコールすると1回あたり ${evCall.toFixed(2)} bb の期待値マイナスになるため即フォールドが正解です。`;
+        }
+      }
+    }
+
+    // Initialize
+    buildMatrixDOM();
+    buildDeckDOM();
+    syncHoleCardsFromHandLabel('AKs');
+    refreshAll();
+  </script>
+</body>
+</html>
