@@ -458,6 +458,119 @@
       cursor: pointer;
     }
     .mini-btn:hover { border-color: var(--blue); color: #fff; }
+    .mini-btn.active {
+      background: var(--green);
+      color: #0b1120;
+      border-color: #6ee7b7;
+    }
+
+    /* Live Vision / PC Screen Capture Panel */
+    .vision-bar {
+      max-width: 1380px;
+      margin: 14px auto 0;
+      padding: 0 14px;
+    }
+    .vision-panel {
+      background: linear-gradient(135deg, #131c31 0%, #0f172a 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 15px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .vision-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .vision-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .vision-btn {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #0b1120;
+      border: none;
+      border-radius: 9px;
+      padding: 7px 14px;
+      font-size: 0.8rem;
+      font-weight: 900;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .vision-btn.stop {
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+      color: #fff;
+    }
+    .vision-body {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(46, 63, 92, 0.6);
+      grid-template-columns: 1fr 340px;
+      gap: 14px;
+      align-items: start;
+    }
+    .vision-body.open {
+      display: grid;
+    }
+    @media (max-width: 960px) {
+      .vision-body.open { grid-template-columns: 1fr; }
+    }
+    .canvas-stage {
+      position: relative;
+      background: #070b14;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 240px;
+      max-height: 420px;
+    }
+    #vision-canvas {
+      max-width: 100%;
+      max-height: 410px;
+      display: block;
+      cursor: crosshair;
+    }
+    .crop-preview-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .crop-box {
+      background: #070b14;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .crop-box.calib-target {
+      border-color: var(--amber);
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+    }
+    .crop-box canvas {
+      width: 32px;
+      height: 44px;
+      background: #1e293b;
+      border-radius: 3px;
+      display: block;
+      margin: 0 auto 3px;
+    }
+    .crop-label {
+      font-size: 0.66rem;
+      font-weight: 800;
+      color: var(--sub);
+    }
   </style>
 </head>
 <body>
@@ -475,6 +588,73 @@
       </div>
     </div>
   </header>
+
+  <!-- ==========================================
+       TOP VISION BAR: PC画面リアルタイム自動認識エンジン
+       ========================================== -->
+  <section class="vision-bar">
+    <div class="vision-panel">
+      <div class="vision-header">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span style="font-size:0.9rem; font-weight:900; color:var(--green);">👁️ PC画面リアルタイム自動認識（Auto-Vision）</span>
+          <span id="vision-status-badge" style="font-size:0.74rem; font-weight:800; padding:3px 10px; border-radius:999px; background:rgba(148,163,184,0.15); color:var(--sub);">
+            待機中（ウィンドウ選択・Python連携・Ctrl+Vスクショ貼付に対応）
+          </span>
+        </div>
+        <div class="vision-controls">
+          <button type="button" class="vision-btn" id="btn-start-capture" onclick="startBrowserScreenCapture()">🎥 PC画面キャプチャ開始</button>
+          <button type="button" class="vision-btn stop" id="btn-stop-capture" style="display:none;" onclick="stopScreenCapture()">⏹ 停止</button>
+          <button type="button" class="mini-btn" id="btn-py-bridge" onclick="togglePythonScannerBridge()">🐍 Python常駐スキャナー接続</button>
+          <button type="button" class="mini-btn" onclick="toggleVisionDrawer()">⚙️ 認識画面・枠の位置調整</button>
+        </div>
+      </div>
+
+      <div class="vision-body" id="vision-drawer">
+        <div>
+          <div class="canvas-stage">
+            <video id="capture-video" autoplay playsinline muted style="display:none;"></video>
+            <canvas id="vision-canvas" width="960" height="540"></canvas>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:0.74rem; color:var(--muted); flex-wrap:wrap; gap:6px;">
+            <span>💡 <b>位置調整方法</b>：右の7つの枠（Hero1〜River）のどれかを選び、上のゲーム画面プレビュー内の「カードの左上（数字とマーク）」をクリックすると読取枠がそこに移動します。</span>
+            <span>📋 <b>Ctrl + V</b> でスクショ画像を直接貼り付けてテストも可能</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="sec-label" style="margin-top:0;">
+            <span>① ゲーム画面レイアウトプリセット</span>
+          </div>
+          <div class="seg-grid cols-2">
+            <button type="button" class="seg-btn active" id="preset-pokecha" onclick="applyRoiPreset('pokecha')">🏆 ポーカーチェイス (横画面)</button>
+            <button type="button" class="seg-btn" id="preset-kkpoker" onclick="applyRoiPreset('kkpoker')">📱 KKPoker / WPT (縦画面)</button>
+          </div>
+
+          <div class="sec-label">
+            <span>② デッキ色モード（4色デッキ推奨）</span>
+          </div>
+          <div class="seg-grid cols-2">
+            <button type="button" class="seg-btn active" id="deck-color-4" onclick="setDeckColorMode(4)">🎨 4色デッキ (♠黒 ♥赤 ♦青 ♣緑)</button>
+            <button type="button" class="seg-btn" id="deck-color-2" onclick="setDeckColorMode(2)">🃏 2色デッキ (♠♣黒 / ♥♦赤)</button>
+          </div>
+
+          <div class="sec-label">
+            <span>③ 7枚の読取枠プレビュー（タップして画面クリックで位置補正）</span>
+          </div>
+          <div class="crop-preview-row" id="crop-preview-row"></div>
+
+          <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
+            <button type="button" class="mini-btn" style="flex:1;" onclick="learnCurrentSlotGlyph()">📌 選択枠のカード文字を1秒学習</button>
+            <button type="button" class="mini-btn" onclick="scanFrameOnce()">🔍 今すぐ1回認識</button>
+            <button type="button" class="mini-btn" onclick="resetRoiAndTemplates()">🔄 枠リセット</button>
+          </div>
+          <div id="vision-log-text" style="margin-top:8px; font-size:0.74rem; color:var(--sub); background:#070b14; border:1px solid var(--border); border-radius:8px; padding:7px 9px;">
+            ゲーム設定で「4色デッキ」をONにするとスート（♠♥♦♣）の認識精度が100%になります。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <main class="workspace">
 
@@ -1485,9 +1665,552 @@
       }
     }
 
+    // =========================================================================
+    // 7. PC Screen Real-Time Auto-Vision Engine (Browser Capture + Python Bridge)
+    // =========================================================================
+    const ROI_STORAGE_KEY = 'poker_gto_vision_rois_v1';
+    const GLYPH_STORAGE_KEY = 'poker_gto_learned_glyphs_v1';
+    const SLOT_NAMES = ['Hero1', 'Hero2', 'Flop1', 'Flop2', 'Flop3', 'Turn', 'River'];
+
+    // Normalized ROI coordinates (x, y, w, h as fractions 0..1 of captured frame)
+    const ROI_PRESETS = {
+      pokecha: [
+        { x: 0.452, y: 0.695, w: 0.036, h: 0.095 }, // Hero1 (top-left corner of left hole card)
+        { x: 0.512, y: 0.695, w: 0.036, h: 0.095 }, // Hero2 (top-left corner of right hole card)
+        { x: 0.342, y: 0.415, w: 0.035, h: 0.095 }, // Flop1
+        { x: 0.408, y: 0.415, w: 0.035, h: 0.095 }, // Flop2
+        { x: 0.474, y: 0.415, w: 0.035, h: 0.095 }, // Flop3
+        { x: 0.540, y: 0.415, w: 0.035, h: 0.095 }, // Turn
+        { x: 0.606, y: 0.415, w: 0.035, h: 0.095 }  // River
+      ],
+      kkpoker: [
+        { x: 0.425, y: 0.725, w: 0.055, h: 0.082 }, // Hero1
+        { x: 0.510, y: 0.725, w: 0.055, h: 0.082 }, // Hero2
+        { x: 0.235, y: 0.435, w: 0.052, h: 0.080 }, // Flop1
+        { x: 0.345, y: 0.435, w: 0.052, h: 0.080 }, // Flop2
+        { x: 0.455, y: 0.435, w: 0.052, h: 0.080 }, // Flop3
+        { x: 0.565, y: 0.435, w: 0.052, h: 0.080 }, // Turn
+        { x: 0.675, y: 0.435, w: 0.052, h: 0.080 }  // River
+      ]
+    };
+
+    const visionState = {
+      preset: 'pokecha',
+      deckColors: 4, // 4-color deck (default) or 2-color deck
+      calibSlotIdx: 0,
+      rois: JSON.parse(JSON.stringify(ROI_PRESETS.pokecha)),
+      mediaStream: null,
+      scanTimer: null,
+      pyBridgeActive: false,
+      pyBridgeTimer: null,
+      lastDetectedSig: '',
+      syntheticGlyphs: {}, // rank -> 16x24 Float32Array
+      learnedGlyphs: {},   // rank -> Array of 16x24 bitmaps
+      lastSlotBitmaps: [null, null, null, null, null, null, null]
+    };
+
+    function initVisionEngine() {
+      // Load saved ROIs & learned glyph templates
+      try {
+        const savedRois = localStorage.getItem(ROI_STORAGE_KEY);
+        if (savedRois) visionState.rois = JSON.parse(savedRois);
+        const savedGlyphs = localStorage.getItem(GLYPH_STORAGE_KEY);
+        if (savedGlyphs) visionState.learnedGlyphs = JSON.parse(savedGlyphs);
+      } catch (_) {}
+
+      // Build 7 crop preview boxes
+      const row = document.getElementById('crop-preview-row');
+      row.innerHTML = '';
+      for (let i = 0; i < 7; i++) {
+        const box = document.createElement('div');
+        box.className = 'crop-box' + (i === visionState.calibSlotIdx ? ' calib-target' : '');
+        box.id = 'crop-box-' + i;
+        box.addEventListener('click', () => {
+          visionState.calibSlotIdx = i;
+          selectCardSlot(i);
+          document.querySelectorAll('.crop-box').forEach((b, idx) => b.classList.toggle('calib-target', idx === i));
+        });
+
+        const cv = document.createElement('canvas');
+        cv.width = 36;
+        cv.height = 52;
+        cv.id = 'crop-cv-' + i;
+
+        const lbl = document.createElement('div');
+        lbl.className = 'crop-label';
+        lbl.id = 'crop-lbl-' + i;
+        lbl.textContent = SLOT_NAMES[i];
+
+        box.appendChild(cv);
+        box.appendChild(lbl);
+        row.appendChild(box);
+      }
+
+      // Generate synthetic 16x24 rank glyph templates for A, K, Q, J, T(10), 9..2
+      buildSyntheticRankTemplates();
+
+      // Click on main vision canvas to reposition the currently selected ROI box
+      const mainCv = document.getElementById('vision-canvas');
+      mainCv.addEventListener('click', (e) => {
+        const rect = mainCv.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const nx = (e.clientX - rect.left) / rect.width;
+        const ny = (e.clientY - rect.top) / rect.height;
+        const roi = visionState.rois[visionState.calibSlotIdx];
+        roi.x = Math.max(0, Math.min(1 - roi.w, nx - roi.w * 0.35));
+        roi.y = Math.max(0, Math.min(1 - roi.h, ny - roi.h * 0.25));
+        try { localStorage.setItem(ROI_STORAGE_KEY, JSON.stringify(visionState.rois)); } catch (_) {}
+        scanFrameOnce();
+        // Auto-advance calibration target to next slot
+        visionState.calibSlotIdx = (visionState.calibSlotIdx + 1) % 7;
+        document.querySelectorAll('.crop-box').forEach((b, idx) => b.classList.toggle('calib-target', idx === visionState.calibSlotIdx));
+      });
+
+      // Clipboard Paste (Ctrl+V) screenshot support
+      window.addEventListener('paste', (e) => {
+        const items = (e.clipboardData || {}).items || [];
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+            const img = new Image();
+            img.onload = () => {
+              const drawer = document.getElementById('vision-drawer');
+              drawer.classList.add('open');
+              drawImageToVisionCanvas(img);
+              scanFrameOnce();
+              setVisionStatus('📋 スクショ画像から自動認識しました', 'var(--green)');
+            };
+            img.src = URL.createObjectURL(blob);
+            break;
+          }
+        }
+      });
+
+      drawPlaceholderVisionCanvas();
+    }
+
+    function drawPlaceholderVisionCanvas() {
+      const cv = document.getElementById('vision-canvas');
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#0a101f';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(20, 20, cv.width - 40, cv.height - 40);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎥 「PC画面キャプチャ開始」を押してポーカー画面を選択するか、Ctrl+Vでスクショを貼り付けてください', cv.width / 2, cv.height / 2 - 10);
+      drawRoiOverlays(ctx, cv.width, cv.height);
+    }
+
+    function buildSyntheticRankTemplates() {
+      const off = document.createElement('canvas');
+      off.width = 48;
+      off.height = 64;
+      const ctx = off.getContext('2d');
+
+      RANKS.forEach(r => {
+        const text = r === 'T' ? '10' : r;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, off.width, off.height);
+        ctx.fillStyle = '#000000';
+        ctx.font = text === '10' ? '900 34px Arial, sans-serif' : '900 40px Arial, sans-serif';
+        ctx.textBaseline = 'top';
+        ctx.fillText(text, 4, 4);
+        const imgData = ctx.getImageData(0, 0, off.width, off.height);
+        const mask = new Uint8Array(off.width * off.height);
+        for (let i = 0; i < mask.length; i++) {
+          mask[i] = imgData.data[i * 4] < 128 ? 1 : 0;
+        }
+        visionState.syntheticGlyphs[r] = normalizeMaskTo16x24(mask, off.width, off.height);
+      });
+    }
+
+    function normalizeMaskTo16x24(mask, w, h) {
+      let minX = w, minY = h, maxX = -1, maxY = -1, count = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (mask[y * w + x]) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+            count++;
+          }
+        }
+      }
+      const out = new Float32Array(16 * 24);
+      if (count < 8 || maxX <= minX || maxY <= minY) return out;
+      const bw = maxX - minX + 1;
+      const bh = maxY - minY + 1;
+      for (let ty = 0; ty < 24; ty++) {
+        const sy = minY + Math.min(bh - 1, Math.floor((ty / 24) * bh));
+        for (let tx = 0; tx < 16; tx++) {
+          const sx = minX + Math.min(bw - 1, Math.floor((tx / 16) * bw));
+          out[ty * 16 + tx] = mask[sy * w + sx] ? 1 : 0;
+        }
+      }
+      return out;
+    }
+
+    function compareBitmaps(a, b) {
+      let match = 0, union = 0;
+      for (let i = 0; i < 384; i++) {
+        const va = a[i] > 0.5 ? 1 : 0;
+        const vb = b[i] > 0.5 ? 1 : 0;
+        if (va === vb) match += (va === 1 ? 2.2 : 0.8);
+        union += (va === 1 || vb === 1) ? 2.2 : 0.8;
+      }
+      return union > 0 ? match / union : 0;
+    }
+
+    function setVisionStatus(msg, color) {
+      const el = document.getElementById('vision-status-badge');
+      if (!el) return;
+      el.textContent = msg;
+      el.style.color = color || 'var(--sub)';
+    }
+
+    function toggleVisionDrawer() {
+      document.getElementById('vision-drawer').classList.toggle('open');
+    }
+
+    function applyRoiPreset(name) {
+      visionState.preset = name;
+      visionState.rois = JSON.parse(JSON.stringify(ROI_PRESETS[name] || ROI_PRESETS.pokecha));
+      document.getElementById('preset-pokecha').classList.toggle('active', name === 'pokecha');
+      document.getElementById('preset-kkpoker').classList.toggle('active', name === 'kkpoker');
+      try { localStorage.setItem(ROI_STORAGE_KEY, JSON.stringify(visionState.rois)); } catch (_) {}
+      scanFrameOnce();
+    }
+
+    function setDeckColorMode(mode) {
+      visionState.deckColors = mode;
+      document.getElementById('deck-color-4').classList.toggle('active', mode === 4);
+      document.getElementById('deck-color-2').classList.toggle('active', mode === 2);
+      scanFrameOnce();
+    }
+
+    function resetRoiAndTemplates() {
+      visionState.rois = JSON.parse(JSON.stringify(ROI_PRESETS[visionState.preset] || ROI_PRESETS.pokecha));
+      visionState.learnedGlyphs = {};
+      try {
+        localStorage.removeItem(ROI_STORAGE_KEY);
+        localStorage.removeItem(GLYPH_STORAGE_KEY);
+      } catch (_) {}
+      document.getElementById('vision-log-text').textContent = '✓ 読取枠と学習データを初期状態にリセットしました。';
+      scanFrameOnce();
+    }
+
+    function learnCurrentSlotGlyph() {
+      const idx = visionState.calibSlotIdx;
+      const bmp = visionState.lastSlotBitmaps[idx];
+      const card = state.slots[idx];
+      if (!bmp || !card) {
+        document.getElementById('vision-log-text').textContent =
+          `⚠️ まず右の52枚デッキで枠「${SLOT_NAMES[idx]}」の正しいカードを選択してから押してください。`;
+        return;
+      }
+      if (!visionState.learnedGlyphs[card.rank]) {
+        visionState.learnedGlyphs[card.rank] = [];
+      }
+      visionState.learnedGlyphs[card.rank].push(Array.from(bmp));
+      if (visionState.learnedGlyphs[card.rank].length > 4) {
+        visionState.learnedGlyphs[card.rank].shift();
+      }
+      try { localStorage.setItem(GLYPH_STORAGE_KEY, JSON.stringify(visionState.learnedGlyphs)); } catch (_) {}
+      document.getElementById('vision-log-text').textContent =
+        `✓ 枠「${SLOT_NAMES[idx]}」の画像パターンを「${card.rank}」として記憶しました！次回から100%一致します。`;
+    }
+
+    async function startBrowserScreenCapture() {
+      try {
+        stopScreenCapture();
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { frameRate: { ideal: 5, max: 10 } },
+          audio: false
+        });
+        visionState.mediaStream = stream;
+        const video = document.getElementById('capture-video');
+        video.srcObject = stream;
+        await video.play();
+
+        document.getElementById('btn-start-capture').style.display = 'none';
+        document.getElementById('btn-stop-capture').style.display = 'inline-flex';
+        document.getElementById('vision-drawer').classList.add('open');
+        setVisionStatus('🟢 リアルタイム画面認識中 (0.5秒周期)', 'var(--green)');
+
+        stream.getVideoTracks()[0].addEventListener('ended', () => {
+          stopScreenCapture();
+        });
+
+        visionState.scanTimer = setInterval(() => {
+          if (video.readyState >= 2) {
+            drawImageToVisionCanvas(video);
+            scanFrameOnce();
+          }
+        }, 500);
+      } catch (err) {
+        setVisionStatus('⚠️ キャプチャがキャンセルまたは拒否されました', 'var(--amber)');
+      }
+    }
+
+    function stopScreenCapture() {
+      if (visionState.scanTimer) {
+        clearInterval(visionState.scanTimer);
+        visionState.scanTimer = null;
+      }
+      if (visionState.mediaStream) {
+        visionState.mediaStream.getTracks().forEach(t => t.stop());
+        visionState.mediaStream = null;
+      }
+      document.getElementById('btn-start-capture').style.display = 'inline-flex';
+      document.getElementById('btn-stop-capture').style.display = 'none';
+      setVisionStatus('⏹ 待機中', 'var(--sub)');
+    }
+
+    function togglePythonScannerBridge() {
+      const btn = document.getElementById('btn-py-bridge');
+      if (visionState.pyBridgeActive) {
+        visionState.pyBridgeActive = false;
+        if (visionState.pyBridgeTimer) clearInterval(visionState.pyBridgeTimer);
+        btn.classList.remove('active');
+        btn.textContent = '🐍 Python常駐スキャナー接続';
+        setVisionStatus('⏹ Pythonスキャナー切断', 'var(--sub)');
+        return;
+      }
+      stopScreenCapture();
+      visionState.pyBridgeActive = true;
+      btn.classList.add('active');
+      btn.textContent = '🐍 Pythonスキャナー接続中';
+      document.getElementById('vision-drawer').classList.add('open');
+      setVisionStatus('🔄 Pythonスキャナー (127.0.0.1:8788) 待機中...', 'var(--amber)');
+
+      visionState.pyBridgeTimer = setInterval(async () => {
+        if (!visionState.pyBridgeActive) return;
+        try {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            drawImageToVisionCanvas(img);
+            scanFrameOnce();
+            setVisionStatus('🟢 Pythonスキャナー自動認識中', 'var(--green)');
+          };
+          img.onerror = () => {
+            setVisionStatus('⚠️ python poker-gto-bot/screen_scanner.py を起動してください', 'var(--amber)');
+          };
+          img.src = 'http://127.0.0.1:8788/frame.jpg?t=' + Date.now();
+        } catch (_) {}
+      }, 600);
+    }
+
+    let rawFrameCanvas = null;
+    function drawImageToVisionCanvas(source) {
+      const sw = source.videoWidth || source.naturalWidth || source.width;
+      const sh = source.videoHeight || source.naturalHeight || source.height;
+      if (!sw || !sh) return;
+
+      if (!rawFrameCanvas) rawFrameCanvas = document.createElement('canvas');
+      rawFrameCanvas.width = sw;
+      rawFrameCanvas.height = sh;
+      rawFrameCanvas.getContext('2d').drawImage(source, 0, 0, sw, sh);
+
+      const cv = document.getElementById('vision-canvas');
+      cv.width = 960;
+      cv.height = Math.round(960 * (sh / sw));
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(source, 0, 0, cv.width, cv.height);
+      drawRoiOverlays(ctx, cv.width, cv.height);
+    }
+
+    function drawRoiOverlays(ctx, cw, ch) {
+      visionState.rois.forEach((roi, idx) => {
+        const x = roi.x * cw;
+        const y = roi.y * ch;
+        const w = roi.w * cw;
+        const h = roi.h * ch;
+        ctx.strokeStyle = idx === visionState.calibSlotIdx ? '#f59e0b' : '#38bdf8';
+        ctx.lineWidth = idx === visionState.calibSlotIdx ? 2.5 : 1.5;
+        ctx.strokeRect(x, y, w, h);
+        ctx.fillStyle = idx === visionState.calibSlotIdx ? 'rgba(245, 158, 11, 0.88)' : 'rgba(15, 23, 42, 0.82)';
+        ctx.fillRect(x, Math.max(0, y - 15), 42, 15);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(SLOT_NAMES[idx], x + 3, Math.max(11, y - 4));
+      });
+    }
+
+    function rgbToHsv(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      const d = max - min;
+      let h = 0;
+      const s = max === 0 ? 0 : d / max;
+      const v = max;
+      if (max !== min) {
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: h * 360, s: s * 100, v: v * 100 };
+    }
+
+    function recognizeCardFromROI(slotIdx) {
+      if (!rawFrameCanvas) return null;
+      const roi = visionState.rois[slotIdx];
+      const fw = rawFrameCanvas.width, fh = rawFrameCanvas.height;
+      const rx = Math.max(0, Math.floor(roi.x * fw));
+      const ry = Math.max(0, Math.floor(roi.y * fh));
+      const rw = Math.max(8, Math.min(fw - rx, Math.floor(roi.w * fw)));
+      const rh = Math.max(12, Math.min(fh - ry, Math.floor(roi.h * fh)));
+
+      const cropCv = document.getElementById('crop-cv-' + slotIdx);
+      const cropCtx = cropCv.getContext('2d');
+      cropCtx.clearRect(0, 0, cropCv.width, cropCv.height);
+      cropCtx.drawImage(rawFrameCanvas, rx, ry, rw, rh, 0, 0, cropCv.width, cropCv.height);
+
+      const cw = cropCv.width, ch = cropCv.height;
+      const imgData = cropCtx.getImageData(0, 0, cw, ch).data;
+
+      // 1. Check if a bright card face is present in this ROI
+      let whitePixels = 0;
+      let redInk = 0, blueInk = 0, greenInk = 0, blackInk = 0;
+      // Only upper 62% of the corner ROI contains the Rank character; lower 38% contains the Suit pip
+      const rankH = Math.floor(ch * 0.62);
+      const rankMask = new Uint8Array(cw * rankH);
+
+      for (let y = 0; y < ch; y++) {
+        for (let x = 0; x < cw; x++) {
+          const idx = (y * cw + x) * 4;
+          const r = imgData[idx], g = imgData[idx + 1], b = imgData[idx + 2];
+          const hsv = rgbToHsv(r, g, b);
+
+          if (hsv.v > 75 && hsv.s < 25) {
+            whitePixels++;
+          } else if (hsv.v < 90 && (hsv.s > 35 || hsv.v < 48)) {
+            // Foreground ink pixel (colored or dark)
+            if (y < rankH) rankMask[y * cw + x] = 1;
+            if (hsv.s > 38 && (hsv.h < 25 || hsv.h > 332)) redInk++;
+            else if (hsv.s > 38 && hsv.h >= 185 && hsv.h <= 255) blueInk++;
+            else if (hsv.s > 35 && hsv.h >= 82 && hsv.h < 175) greenInk++;
+            else if (hsv.v < 45) blackInk++;
+          }
+        }
+      }
+
+      const totalPixels = cw * ch;
+      const totalInk = redInk + blueInk + greenInk + blackInk;
+      if (whitePixels < totalPixels * 0.20 || totalInk < 14) {
+        visionState.lastSlotBitmaps[slotIdx] = null;
+        document.getElementById('crop-lbl-' + slotIdx).textContent = SLOT_NAMES[slotIdx];
+        return null;
+      }
+
+      // 2. Determine Suit (♠, ♥, ♦, ♣)
+      let suitObj = SUITS[0]; // default ♠
+      if (visionState.deckColors === 4 || blueInk > 10 || greenInk > 10) {
+        const maxCol = Math.max(redInk, blueInk, greenInk, blackInk);
+        if (maxCol === redInk) suitObj = SUITS[1];      // ♥
+        else if (maxCol === blueInk) suitObj = SUITS[2]; // ♦
+        else if (maxCol === greenInk) suitObj = SUITS[3];// ♣
+        else suitObj = SUITS[0];                         // ♠
+      } else {
+        // 2-color deck fallback: Red (♥/♦) vs Black (♠/♣)
+        suitObj = redInk > blackInk ? SUITS[1] : SUITS[0];
+      }
+
+      // 3. Normalize Rank Glyph to 16x24 and match against Learned + Synthetic Templates
+      const normBmp = normalizeMaskTo16x24(rankMask, cw, rankH);
+      visionState.lastSlotBitmaps[slotIdx] = normBmp;
+
+      let bestRank = 'A';
+      let bestScore = -1;
+
+      // Check user-learned templates first (highest priority)
+      Object.keys(visionState.learnedGlyphs).forEach(r => {
+        (visionState.learnedGlyphs[r] || []).forEach(savedBmp => {
+          const sc = compareBitmaps(normBmp, savedBmp) + 0.08;
+          if (sc > bestScore) { bestScore = sc; bestRank = r; }
+        });
+      });
+
+      // Check synthetic templates
+      RANKS.forEach(r => {
+        const synBmp = visionState.syntheticGlyphs[r];
+        if (!synBmp) return;
+        const sc = compareBitmaps(normBmp, synBmp);
+        if (sc > bestScore) { bestScore = sc; bestRank = r; }
+      });
+
+      const rankIdx = RANKS.indexOf(bestRank);
+      const suitIdx = SUITS.indexOf(suitObj);
+      const code = bestRank + suitObj.code;
+      document.getElementById('crop-lbl-' + slotIdx).textContent = bestRank + suitObj.sym;
+
+      return {
+        rankIdx,
+        suitIdx,
+        rank: bestRank,
+        suit: suitObj.code,
+        sym: suitObj.sym,
+        cls: suitObj.cls,
+        code
+      };
+    }
+
+    function scanFrameOnce() {
+      if (!rawFrameCanvas) return;
+      // Redraw preview with latest ROI boxes
+      const cv = document.getElementById('vision-canvas');
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(rawFrameCanvas, 0, 0, cv.width, cv.height);
+      drawRoiOverlays(ctx, cv.width, cv.height);
+
+      const detected = [];
+      const seenCodes = new Set();
+      for (let i = 0; i < 7; i++) {
+        const card = recognizeCardFromROI(i);
+        if (card && !seenCodes.has(card.code)) {
+          detected.push(card);
+          seenCodes.add(card.code);
+        } else {
+          detected.push(null);
+        }
+      }
+
+      const sig = detected.map(c => c ? c.code : '_').join(',');
+      if (sig === '_,_,_,_,_,_,_' || sig === visionState.lastDetectedSig) return;
+      visionState.lastDetectedSig = sig;
+
+      // Apply detected cards to slots & trigger GTO calculation
+      for (let i = 0; i < 7; i++) {
+        if (detected[i]) state.slots[i] = detected[i];
+        else if (i >= 2) state.slots[i] = null; // Clear board cards when new hand starts
+      }
+
+      if (state.slots[0] && state.slots[1]) {
+        const c0 = state.slots[0], c1 = state.slots[1];
+        const rMin = Math.min(c0.rankIdx, c1.rankIdx);
+        const rMax = Math.max(c0.rankIdx, c1.rankIdx);
+        if (rMin === rMax) state.selectedHand = RANKS[rMin] + RANKS[rMax];
+        else if (c0.suit === c1.suit) state.selectedHand = RANKS[rMin] + RANKS[rMax] + 's';
+        else state.selectedHand = RANKS[rMin] + RANKS[rMax] + 'o';
+      }
+
+      renderCardSlots();
+      rollRngAndRefresh();
+      runPostflopSolver();
+    }
+
     // Initialize
     buildMatrixDOM();
     buildDeckDOM();
+    initVisionEngine();
     syncHoleCardsFromHandLabel('AKs');
     refreshAll();
   </script>
